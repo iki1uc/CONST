@@ -109,7 +109,7 @@ Dieses System bildet die Grundlage für:
 
 ---
 
-7. Lizenz
+© iki1uc · CONTINIUM · Unified OS7. Lizenz
 Open System – frei nutzbar.
 Branding „iki1uc wieimmer“ muss bestehen bleiben.
 Keine Garantie, Nutzung auf eigene Verantwortung.
