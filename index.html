@@ -1,37 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>GEO‑3D‑ASCII · RUN8 · iki1uc</title>
+<title>CONTINIUM · Unified OS · iki1uc</title>
+
 <style>
-body { background:#000; color:#0f0; font-family:Consolas; padding:20px; }
-pre { font-size:16px; line-height:18px; }
+body {
+    margin:0;
+    background:#000;
+    color:#0f0;
+    font-family:Consolas, monospace;
+}
+#out {
+    position:absolute;
+    top:20px;
+    left:20px;
+    width:360px;
+    height:420px;
+    overflow:auto;
+    background:#111;
+    border-left:3px solid #6cf;
+    padding:15px;
+}
+canvas {
+    display:block;
+}
 </style>
-</head>
-<body>
 
-<h2>GEO‑3D‑ASCII · RUN8</h2>
-<pre id="geo">START…</pre>
+<script type="module">
+import { QUANT } from "./CONST_QUANT.js";          // dein Quantifizierer
+import { CONTINIUM_KEY } from "./CONTINIUM_KEY.js";
+import { LAUF } from "./lauf.js";
+import { orbitTick } from "./orbitTick.js";
+import {
+    WHIRL,
+    PIPELINE_3_6,
+    CONTINIUM_TRUTH
+} from "./um.js";
 
-<script>
-let f = 0;
+/* ======================================================
+   QUANTIFIER START
+   ====================================================== */
+QUANT.start();
 
-function anim(){
-    f++;
+/* ======================================================
+   CANVAS
+   ====================================================== */
+const cv = document.createElement("canvas");
+cv.width = window.innerWidth;
+cv.height = window.innerHeight;
+document.body.appendChild(cv);
+const ctx = cv.getContext("2d");
 
-    // 3D‑Rotation simuliert durch wechselnde Tiefe
-    const depth = ["●","○","·","∙","•"];
-    const d = (i)=> depth[(f+i)%depth.length];
+/* ======================================================
+   TEXT‑OUTPUT
+   ====================================================== */
+const out = document.createElement("pre");
+out.id = "out";
+out.textContent = "Starte CONTINIUM OS…";
+document.body.appendChild(out);
 
-    // Anime‑Glow simuliert durch Funken
-    const glow = (f%2 ? "✦" : "✧");
+/* ======================================================
+   ATOM‑Beweis Animation
+   ====================================================== */
+function ATOM_ANIM(t){
+    const seq = QUANT.atom.seq;
+    return seq[Math.floor((t*10) % seq.length)];
+}
 
-    // Amiga‑Raster simuliert durch horizontale Balken
-    const raster = (f%3 ? "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓" : "██████████████████");
+/* ======================================================
+   Singularität
+   ====================================================== */
+function SINGULAR_VIEW(t){
+    const p = CONTINIUM_KEY.pos(t);
+    const s = QUANT.singular(p);
+    return { p, s };
+}
 
-    const geo = `
-GEO‑3D‑ROTATION (frame ${f})
+/* ======================================================
+   VISUAL DRAW
+   ====================================================== */
+function draw(scene){
+    ctx.clearRect(0,0,cv.width,cv.height);
 
-X‑Axis  ─── ${d(1)} ${d(2)} ${d(3)}
-Y‑Axis  ─── ${d(2)} ${d(3)} ${d(4)}
-Z‑
+    const cx = cv.width/2;
+    const cy = cv.height/2;
+
+    // QS‑XI‑XTender Dreieck (SYN + QUANDT)
+    ctx.strokeStyle = "#6cf";
+    ctx.beginPath();
+    ctx.moveTo(cx + scene.qsxi.tokio.x/30, cy + scene.qsxi.tokio.y/30);
+    ctx.lineTo(cx + scene.qsxi.corlu.x/30, cy + scene.qsxi.corlu.y/30);
+    ctx.lineTo(cx + scene.qsxi.hh.x/30,    cy + scene.qsxi.hh.y/30);
+    ctx.closePath();
+    ctx.stroke();
+
+    // ATOM‑Beweis
+    ctx.fillStyle = "#0f0";
+    ctx.font = "32px Consolas";
+    ctx.fillText(scene.atom, cx - 16, cy - 16);
+
+    // Singularität (Schwarzes Loch)
+    ctx.strokeStyle = "#f00";
+    ctx.beginPath();
+    ctx.arc(cx, cy, scene.singular.s.radius/300, 0, Math.PI*2);
+    ctx.stroke();
+}
+
+/* =================================================
