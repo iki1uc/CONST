@@ -1,164 +1,273 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>CONTINIUM · Unified OS · iki1uc</title>
-
-<style>
-body {
-    margin:0;
-    background:#000;
-    color:#0f0;
-    font-family:Consolas, monospace;
-}
-#out {
-    position:absolute;
-    top:20px;
-    left:20px;
-    width:360px;
-    height:420px;
-    overflow:auto;
-    background:#111;
-    border-left:3px solid #6cf;
-    padding:15px;
-}
-canvas {
-    display:block;
-}
-</style>
-
-<script type="module">
-/* ======================================================
-   IMPORTS — REAL FILE NAMES FROM YOUR REPO
-   ====================================================== */
-import { QUANT } from "./CONST_QUANT.js";
-import { CONTINIUM_KEY } from "./CONTINIUM_KEY.js";
-import { LAUF } from "./lauf.js";
-import { orbitTick } from "./orbitTick.js";
-import { WHIRL, PIPELINE_3_6, CONTINIUM_TRUTH } from "./um.js";
-
-/* ======================================================
-   QUANTIFIER START (SYN + QUANDT + SPRUNG-ORBIT)
-   ====================================================== */
-QUANT.start();
-
-/* ======================================================
-   CANVAS
-   ====================================================== */
-const cv = document.createElement("canvas");
-cv.width = window.innerWidth;
-cv.height = window.innerHeight;
-document.body.appendChild(cv);
-const ctx = cv.getContext("2d");
-
-/* ======================================================
-   TEXT‑OUTPUT
-   ====================================================== */
-const out = document.createElement("pre");
-out.id = "out";
-out.textContent = "Starte CONTINIUM OS…";
-document.body.appendChild(out);
-
-/* ======================================================
-   ATOM‑Beweis Animation
-   ====================================================== */
-function ATOM_ANIM(t){
-    const seq = QUANT.atom.seq;
-    return seq[Math.floor((t*10) % seq.length)];
-}
-
-/* ======================================================
-   Singularität
-   ====================================================== */
-function SINGULAR_VIEW(t){
-    const p = CONTINIUM_KEY.pos(t);
-    const s = QUANT.singular(p);
-    return { p, s };
-}
-
-/* ======================================================
-   VISUAL DRAW
-   ====================================================== */
-function draw(scene){
-    ctx.clearRect(0,0,cv.width,cv.height);
-
-    const cx = cv.width/2;
-    const cy = cv.height/2;
-
-    // QS‑XI‑XTender Dreieck (SYN + QUANDT + SPRUNG)
-    ctx.strokeStyle = "#6cf";
-    ctx.beginPath();
-    ctx.moveTo(cx + scene.qsxi.tokio.x/30, cy + scene.qsxi.tokio.y/30);
-    ctx.lineTo(cx + scene.qsxi.corlu.x/30, cy + scene.qsxi.corlu.y/30);
-    ctx.lineTo(cx + scene.qsxi.hh.x/30,    cy + scene.qsxi.hh.y/30);
-    ctx.closePath();
-    ctx.stroke();
-
-    // ATOM‑Beweis
-    ctx.fillStyle = "#0f0";
-    ctx.font = "32px Consolas";
-    ctx.fillText(scene.atom, cx - 16, cy - 16);
-
-    // Singularität (Schwarzes Loch)
-    ctx.strokeStyle = "#f00";
-    ctx.beginPath();
-    ctx.arc(cx, cy, scene.singular.s.radius/300, 0, Math.PI*2);
-    ctx.stroke();
-}
-
-/* ======================================================
-   LOOP
-   ====================================================== */
-let pipe = null;
-
-function CONTINIUM_LOOP(){
-
-    const t = performance.now() * 0.0004;
-
-    const pos = CONTINIUM_KEY.pos(t);
-    const slide = CONTINIUM_KEY.slideFrame(pos);
-    const score = CONTINIUM_KEY.stability(pos);
-
-    const atom = ATOM_ANIM(t);
-    const qsxi = QUANT.qsxi();        // ← CONST wird benutzt
-    const singular = SINGULAR_VIEW(t);
-
-    const truth = CONTINIUM_TRUTH();
-    const whirl = WHIRL({ x: 9, y: 6, z: 3 });
-    const lauf = LAUF.komplett();
-
-    const scene = {
-        orbit: pos,
-        slide,
-        score,
-        atom,
-        qsxi,
-        singular,
-        lauf,
-        truth,
-        whirl,
-        quant: QUANT,
-        skills: CONTINIUM_KEY.skills
-    };
-
-    draw(scene);
-
-    out.textContent = JSON.stringify(scene, null, 2);
-
-    orbitTick(0.016);
-
-    requestAnimationFrame(CONTINIUM_LOOP);
-}
-
-/* ======================================================
-   START
-   ====================================================== */
-window.onload = () => {
-    pipe = PIPELINE_3_6();
-    CONTINIUM_LOOP();
-};
-</script>
-
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>WELT Portal – DE System (ALL‑X‑ALL)</title>
+  <style>
+    :root{--bg:#000;--fg:#0f0;--accent:#6cf;--card:#111}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:Consolas,monospace}
+    .wrap{display:grid;grid-template-columns:360px 1fr;gap:12px;height:100vh;padding:12px}
+    .card{background:var(--card);padding:12px;border-left:4px solid var(--accent);border-radius:6px;overflow:auto}
+    header h1{margin:0;color:var(--accent);font-size:18px}
+    #welt-visual-bg{position:relative;height:420px;border-radius:6px;overflow:hidden;background:linear-gradient(180deg,#001,#001a)}
+    #stargate,#water-effect,#hh-cube{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none}
+    #stargate{top:28px;width:260px;height:120px;border:3px solid #6cf;border-radius:140px;box-shadow:0 0 12px rgba(108,204,255,0.08)}
+    #water-effect{bottom:0;width:100%;height:140px;background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,50,50,0.25));mix-blend-mode:screen;opacity:0.7}
+    #hh-cube{right:20px;top:20px;width:80px;height:80px;background:linear-gradient(90deg,#0f0,#6cf);transform-origin:center;opacity:0.18}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button{background:var(--accent);color:#000;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
+    #portal-screen{min-height:120px;padding:10px;background:#070;border-left:3px solid #6cf;border-radius:4px;margin-top:8px}
+    #fusion-out{white-space:pre-wrap;background:#050;padding:10px;margin-top:8px;border-radius:4px;border:1px solid rgba(108,204,255,0.06);max-height:220px;overflow:auto}
+    canvas{width:100%;height:420px;display:block}
+  </style>
+  <script>
+    // EPOCHE: globale Variablen
+    window.WELT = window.WELT || {};
+    window.WELT_CURRENT_LANGUAGE = "DE";
+    window.WELT_STARTED_AT = Date.now();
+    // module injection store
+    window.WELT._modules = {};
+    window.WELT.setModule = (name,obj) => { window.WELT._modules[name]=obj; console.info('WELT module set:',name); };
+    window.WELT.inject = (fnName, fn) => { window.WELT[fnName] = fn; console.info('WELT injected fn:',fnName); };
+  </script>
 </head>
-<body></body>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header><h1>WELT‑Portal • DE</h1><div style="color:#9f9;font-size:13px">CONTINIUM · DE‑System · EDEN</div></header>
+
+      <section style="margin-top:10px">
+        <div>
+          <button data-lang="DE">Deutsch</button>
+          <button data-lang="EN">English</button>
+          <button data-lang="TR">Türkçe</button>
+        </div>
+        <div class="controls" style="margin-top:8px">
+          <button id="btnLoadRoom">Load Room</button>
+          <button id="btnBindEden">Bind EDEN</button>
+          <button id="btnBoot">MASTER.boot</button>
+          <select id="persona"><option value="du">du</option><option value="er">er</option><option value="ich">ich</option></select>
+        </div>
+        <div id="portal-screen" aria-live="polite">Lade: DE.room …</div>
+      </section>
+
+      <section style="margin-top:8px">
+        <div style="font-weight:700">Fusion Output</div>
+        <pre id="fusion-out">–</pre>
+      </section>
+    </div>
+
+    <div class="card">
+      <header><h1>RAUM — Visual</h1></header>
+      <div id="welt-visual-bg">
+        <div id="stargate" aria-hidden="true"></div>
+        <canvas id="welt-canvas"></canvas>
+        <div id="hh-cube" aria-hidden="true"></div>
+        <div id="water-effect" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* --------------------------
+   Core helpers & fallbacks
+   -------------------------- */
+function safe(fn, fallback){
+  try{ return fn(); } catch(e){ console.warn('safe error', e); return fallback; }
+}
+function log(...a){ console.log(...a); }
+
+/* ---------- applyOrbit ---------- */
+function applyOrbit(orbit){
+  const stargate = document.getElementById("stargate");
+  const water = document.getElementById("water-effect");
+  const cube = document.getElementById("hh-cube");
+  if(stargate) stargate.style.boxShadow = `0 0 ${((orbit.pulse||0) * 40)}px #00aaff`;
+  if(water) water.style.opacity = (orbit.waterOpacity==null?0.7:orbit.waterOpacity);
+  if(cube) cube.style.transform = `translate(-50%, -50%) rotate(${orbit.rotate||0}deg) translateY(${orbit.cubeFloat||0}px)`;
+  // background drift (simple)
+  const bg = document.getElementById('welt-visual-bg');
+  if(bg) bg.style.backgroundPosition = `${(orbit.rotate||0)%360}px ${(orbit.pulse||0)*20}px`;
+}
+
+/* ---------- Room constructors ---------- */
+function DE_ROOM(){
+  return {
+    epoche: { orbit0: 0 },
+    raum: { rotate3: 0 },
+    fähigkeit: { switch0: 0 },
+    vector: { axis: "X" },
+    opta: { optimize0: 0 },
+    sli: { open0: 0 }
+  };
+}
+function CONTINIUM_ROOM(){
+  return {
+    pos: { x:0, y:0, z:0 },
+    qsxi: { tokio:{}, corlu:{}, hh:{} },
+    singular: { s:{ radius:0 } },
+    tmpEnergy: 0,
+    arg: 0, xarg: 0, arg3te: 0
+  };
+}
+
+/* ---------- WELT orbit renderer ---------- */
+function WELT_ORBIT_RENDER(t){
+  return {
+    pulse: Math.sin(t * 2) * 0.5 + 0.5,
+    rotate: (t * 40) % 360,
+    cubeFloat: Math.sin(t * 1.5) * 20,
+    waterOpacity: Math.sin(t * 0.8) * 0.4 + 0.6
+  };
+}
+
+/* ---------- Fusion utilities (adapted) ---------- */
+function FUSION_6(scene){
+  return { syn: scene.syn, quant: scene.quant, const: scene.const, tmp: scene.tmp, qsxi: scene.qsxi, orbit: scene.orbit };
+}
+function DIM6_MATRIX(pos){ return { x:pos.x,y:pos.y,z:pos.z, drift:pos.x*0.33, slide:pos.y*0.66, sprung:pos.z*0.99 }; }
+function MAP6_ROOMS(qsxi,singular,tmp){ return { tokio:qsxi?.tokio, corlu:qsxi?.corlu, hh:qsxi?.hh, orbit: singular?.s?.radius ?? null, singular: singular?.s, tmpEnergy: tmp }; }
+function AXIS6_FACTORS(scene){ return { atom:scene.atom, qsxi:scene.qsxi, singular:scene.singular, tmpEnergy:scene.tmpEnergy, arg3te:scene.arg3te, xarg:scene.xarg }; }
+function ALGORITOMAT_6(scene){ return { ebene:FUSION_6(scene), dimension:DIM6_MATRIX(scene.pos), raum:MAP6_ROOMS(scene.qsxi, scene.singular, scene.tmpEnergy), faktor:AXIS6_FACTORS(scene) }; }
+function FUSION_6_TO_3(alg){ return { A:alg.dimension, B:alg.faktor, C:alg.raum }; }
+function FUSION_3_TO_1(f3){ return { unity:{ move:f3.A, energy:f3.B, geo:f3.C } }; }
+function FUSION_1_TO_0(f1){ return { zeroPoint:true, all:f1.unity }; }
+function FUSION_0_TO_ALL(zero){ return { ALL:zero.all, state:"CONTINIUM-UNIFIED" }; }
+function CONTINIUM_ALGORITOMAT(scene){ const alg6=ALGORITOMAT_6(scene); const f3=FUSION_6_TO_3(alg6); const f1=FUSION_3_TO_1(f3); const f0=FUSION_1_TO_0(f1); return FUSION_0_TO_ALL(f0); }
+
+/* ---------- DE fusion pieces ---------- */
+function DE_VECTOR_FUSION(pos){ return { X:{gen:"4u",axis:"X",value:pos.x}, Y:{gen:"WHY",axis:"Y",value:pos.y}, Z:{gen:"onu",axis:"Z",value:pos.z}, drift:pos.x*0.33, slide:pos.y*0.66, sprung:pos.z*0.99 }; }
+function DE_ORBIT_FUSION(scene){ return { epoche: scene.epoche?.orbit0, raum: scene.raum?.rotate3, fähigkeit: scene.fähigkeit?.switch0, vector: scene.vector?.axis, opta: scene.opta?.optimize0, sli: scene.sli?.open0, continium_orbit: scene.orbit, qsxi_orbit: scene.qsxi, singular_orbit: scene.singular, tmp_orbit: scene.tmpEnergy }; }
+function DE_SLI_FUSION(scene){ return { open: scene.sli?.open0, zone: scene.sli?.zone0, anchor:0, qsxi: scene.qsxi, orbit: scene.orbit, singular: scene.singular, tmp: scene.tmpEnergy, arg: scene.arg, xarg: scene.xarg, arg3te: scene.arg3te }; }
+function ROOM_FUSION(de,cont){ return { epoche:de.epoche, raum:de.raum, fähigkeit:de.fähigkeit, vector:de.vector, opta:de.opta, sli:de.sli, pos:cont.pos, qsxi:cont.qsxi, singular:cont.singular, tmpEnergy:cont.tmpEnergy, arg:cont.arg, xarg:cont.xarg, arg3te:cont.arg3te }; }
+function EDEN_BIND(room){ return { eden:{ anchor:0, bind:room, state:"EDEN-ACTIVE" } }; }
+function MASTER_BOOT_FUSION(de,cont,eden){ return { boot:{ de, continium:cont, eden, state:"MASTER-BOOT-OK" } }; }
+function WELT_FUSION(scene){ const orbit=WELT_ORBIT_RENDER(scene.t); const room=ROOM_FUSION(scene.de, scene.cont); const eden=EDEN_BIND(room); const boot=MASTER_BOOT_FUSION(scene.de, scene.cont, eden); return { orbit, room, eden, boot, state:"WELT-DE-CONTINIUM-UNIFIED" }; }
+
+/* ---------- SEEÜ / SEEUE_ALLXALL_LOOP (with fallbacks) ---------- */
+function defaultEVO(scene){ /* minimal behavior */ scene._EVO = { state:'idle' }; }
+function defaultGATE(scene){ return { boost: 0 }; }
+function defaultGEO(gate,evo){ return { vec6: { x:0,y:0,z:0,a:0,b:0,c:0 } }; }
+function defaultSEEUE(gate,geo){ return { questions: [] }; }
+function defaultRADAR(geo){ /* renderable placeholder */ }
+
+/* The main loop (safe): uses injected modules if present, otherwise fallbacks.
+   scene must contain: de, cont, out (DOM output elements), speed (ms), step (counter)
+*/
+function SEEUE_ALLXALL_LOOP(scene){
+  try {
+    scene.t = performance.now() * 0.002;
+    // EVO (injected?) else fallback
+    const EVO = window.WELT._modules.EVO || { act: defaultEVO };
+    safe(()=>EVO.act(scene), null);
+
+    // GATE
+    const GATE = window.WELT._modules.GATE || { run: defaultGATE };
+    const gate = safe(()=> (window.WELT._modules.GATE ? window.WELT._modules.GATE.run(scene, EVO) : defaultGATE(scene)), defaultGATE(scene));
+
+    // GEO
+    const GEO = window.WELT._modules.GEO || { make: defaultGEO };
+    const geo = safe(()=> (window.WELT._modules.GEO ? window.WELT._modules.GEO.make(gate, EVO) : defaultGEO(gate,EVO)), defaultGEO(gate,EVO));
+
+    // SEEÜ core
+    const SEE = window.WELT._modules.SEEUE || { ask: defaultSEEUE };
+    const fragen = safe(()=> (window.WELT._modules.SEEUE ? window.WELT._modules.SEEUE.ask(gate,geo) : defaultSEEUE(gate,geo)), defaultSEEUE(gate,geo));
+
+    // ALL‑X‑ALL Fusion (WELT)
+    const allxall = WELT_FUSION({ t: scene.t, de: scene.de, cont: scene.cont });
+
+    // apply orbit visuals
+    applyOrbit(allxall.orbit || {});
+
+    // radar (injected or fallback)
+    const RADAR = window.WELT._modules.RADAR || { render: defaultRADAR };
+    safe(()=>RADAR.render(geo));
+
+    // DOM outputs if present
+    if(scene.out){
+      if(scene.out.seeu) scene.out.seeu.textContent = `SEEÜ Step=${scene.step}`;
+      if(scene.out.gate) scene.out.gate.textContent = JSON.stringify(gate, null, 2);
+      if(scene.out.geo) scene.out.geo.textContent = JSON.stringify(geo, null, 2);
+      if(scene.out.fragen) scene.out.fragen.textContent = JSON.stringify(fragen, null, 2);
+      // fusion summary
+      const fusionOut = { welt: allxall };
+      const fusionEl = document.getElementById('fusion-out');
+      if(fusionEl) fusionEl.textContent = JSON.stringify(fusionOut, null, 2);
+    }
+
+    scene.step = (scene.step || 0) + 1;
+    // schedule next iteration
+    setTimeout(()=> SEEUE_ALLXALL_LOOP(scene), scene.speed || 400);
+  } catch(e){
+    console.error('SEEUE loop error', e);
+  }
+}
+
+/* ---------- Simulated rooms (OPTA) ---------- */
+const ROOMS = {
+  'DE.room': { language:'DE', name:'Deutschland Room', meta:{pop:83}, pos:{x:120,y:34,z:6}, qsxi:{tokio:{x:10,y:-5},corlu:{x:-30,y:20},hh:{x:0,y:0}}, singular:{s:{radius:42}}, tmpEnergy:3 },
+  'EN.room': { language:'EN', name:'English Room', meta:{pop:330}, pos:{x:-40,y:80,z:1}, qsxi:{tokio:{x:3,y:6},corlu:{x:10,y:-9},hh:{x:2,y:2}}, singular:{s:{radius:12}}, tmpEnergy:1.2 }
+};
+
+/* ---------- UI wiring & init ---------- */
+const portalButtons = document.querySelectorAll('[data-lang]');
+portalButtons.forEach(b => b.addEventListener('click', ()=> { const lang = b.getAttribute('data-lang'); window.WELT_CURRENT_LANGUAGE = lang; loadLanguageRoom(lang); }));
+
+document.getElementById('btnLoadRoom').addEventListener('click', ()=> loadLanguageRoom(window.WELT_CURRENT_LANGUAGE));
+document.getElementById('btnBindEden').addEventListener('click', ()=> { const room = window._CURRENT_ROOM || ROOMS['DE.room']; const eden = EDEN_BIND(room); document.getElementById('fusion-out').textContent = JSON.stringify(eden, null, 2); });
+document.getElementById('btnBoot').addEventListener('click', ()=> { const de = window._CURRENT_ROOM || ROOMS['DE.room']; const cont = CONTINIUM_ROOM(); cont.pos = de.pos; cont.qsxi = de.qsxi; cont.singular = de.singular; cont.tmpEnergy = de.tmpEnergy; const eden = EDEN_BIND(de); const boot = MASTER_BOOT_FUSION(de, cont, eden); document.getElementById('fusion-out').textContent = JSON.stringify(boot, null, 2); });
+
+function loadLanguageRoom(lang){
+  const file = (lang === 'DE' ? 'DE.room' : lang === 'EN' ? 'EN.room' : 'DE.room');
+  document.getElementById('portal-screen').textContent = 'Lade: ' + file + ' …';
+  setTimeout(()=> {
+    const room = ROOMS[file] || DE_ROOM();
+    window._CURRENT_ROOM = room;
+    document.getElementById('portal-screen').textContent = `Room geladen: ${room.name || file} (lang=${room.language||'DE'})`;
+    // update fusion immediately
+    const scene = { t:(Date.now()-window.WELT_STARTED_AT)/1000, de: room, cont: CONTINIUM_ROOM(), out: null };
+    const welt = WELT_FUSION(scene);
+    document.getElementById('fusion-out').textContent = JSON.stringify(welt, null, 2);
+  }, 250);
+}
+
+/* start primary loop (SEEÜ) */
+const sceneRoot = { de: ROOMS['DE.room'], cont: CONTINIUM_ROOM(), out: { seeu: null, gate: null, geo: null, fragen: null }, speed: 600, step: 0 };
+window.addEventListener('load', ()=> {
+  // attach simple debug outputs if you want
+  sceneRoot.out.seeu = document.createElement('div'); // not shown
+  // let the SEEUE loop run
+  SEEUE_ALLXALL_LOOP(sceneRoot);
+});
+
+/* orbit canvas animation (separate RAF) */
+(function orbitRAF(){
+  const canvas = document.getElementById('welt-canvas');
+  const ctx = canvas.getContext('2d');
+  function draw(now){
+    const t = now * 0.001;
+    const orbit = WELT_ORBIT_RENDER(t);
+    // apply orbit to DOM
+    applyOrbit(orbit);
+    // draw simple orbit visuals on canvas
+    canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.save(); ctx.translate(canvas.width/2, 130);
+    ctx.strokeStyle = `rgba(108,204,255,${0.15 + orbit.pulse*0.6})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,110,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* Public injection helpers (for cross‑repo wiring) */
+window.WELT.setModule('EVO', { act: defaultEVO });
+window.WELT.setModule('GATE', { run: defaultGATE });
+window.WELT.setModule('GEO', { make: defaultGEO });
+window.WELT.setModule('SEEUE', { ask: defaultSEEUE });
+window.WELT.setModule('RADAR', { render: defaultRADAR });
+
+</script>
+</body>
 </html>
