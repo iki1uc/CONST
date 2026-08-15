@@ -28,18 +28,17 @@ canvas {
 </style>
 
 <script type="module">
-import { QUANT } from "./CONST_QUANT.js";          // dein Quantifizierer
+/* ======================================================
+   IMPORTS — REAL FILE NAMES FROM YOUR REPO
+   ====================================================== */
+import { QUANT } from "./CONST_QUANT.js";
 import { CONTINIUM_KEY } from "./CONTINIUM_KEY.js";
 import { LAUF } from "./lauf.js";
 import { orbitTick } from "./orbitTick.js";
-import {
-    WHIRL,
-    PIPELINE_3_6,
-    CONTINIUM_TRUTH
-} from "./um.js";
+import { WHIRL, PIPELINE_3_6, CONTINIUM_TRUTH } from "./um.js";
 
 /* ======================================================
-   QUANTIFIER START
+   QUANTIFIER START (SYN + QUANDT + SPRUNG-ORBIT)
    ====================================================== */
 QUANT.start();
 
@@ -86,7 +85,7 @@ function draw(scene){
     const cx = cv.width/2;
     const cy = cv.height/2;
 
-    // QS‑XI‑XTender Dreieck (SYN + QUANDT)
+    // QS‑XI‑XTender Dreieck (SYN + QUANDT + SPRUNG)
     ctx.strokeStyle = "#6cf";
     ctx.beginPath();
     ctx.moveTo(cx + scene.qsxi.tokio.x/30, cy + scene.qsxi.tokio.y/30);
@@ -107,4 +106,59 @@ function draw(scene){
     ctx.stroke();
 }
 
-/* =================================================
+/* ======================================================
+   LOOP
+   ====================================================== */
+let pipe = null;
+
+function CONTINIUM_LOOP(){
+
+    const t = performance.now() * 0.0004;
+
+    const pos = CONTINIUM_KEY.pos(t);
+    const slide = CONTINIUM_KEY.slideFrame(pos);
+    const score = CONTINIUM_KEY.stability(pos);
+
+    const atom = ATOM_ANIM(t);
+    const qsxi = QUANT.qsxi();        // ← CONST wird benutzt
+    const singular = SINGULAR_VIEW(t);
+
+    const truth = CONTINIUM_TRUTH();
+    const whirl = WHIRL({ x: 9, y: 6, z: 3 });
+    const lauf = LAUF.komplett();
+
+    const scene = {
+        orbit: pos,
+        slide,
+        score,
+        atom,
+        qsxi,
+        singular,
+        lauf,
+        truth,
+        whirl,
+        quant: QUANT,
+        skills: CONTINIUM_KEY.skills
+    };
+
+    draw(scene);
+
+    out.textContent = JSON.stringify(scene, null, 2);
+
+    orbitTick(0.016);
+
+    requestAnimationFrame(CONTINIUM_LOOP);
+}
+
+/* ======================================================
+   START
+   ====================================================== */
+window.onload = () => {
+    pipe = PIPELINE_3_6();
+    CONTINIUM_LOOP();
+};
+</script>
+
+</head>
+<body></body>
+</html>
