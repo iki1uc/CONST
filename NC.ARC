@@ -1,0 +1,11 @@
+NC.ARCHIEF:
+  KEY: φ⁻¹
+  CONTROL: SYN ↔ QUANT
+  STORE: RESPO
+  LIMIT:
+    SYN > QUANT → damp QUANT
+    QUANT > SYN → damp SYN
+  TARGET: 0.618
+  STRUCTURE:
+    PYRAMIDE → WÜRFEL → RESPO
+    ANGLES: 90°, 120°, φ
