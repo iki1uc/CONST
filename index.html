@@ -1,483 +1,748 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>WELT Portal — Komplettes, robustes Index (rundum Abdeckung)</title>
-  <style>
-    :root{--bg:#000;--fg:#0f0;--accent:#6cf;--card:#071}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:Consolas,monospace}
-    .wrap{display:grid;grid-template-columns:380px 1fr;gap:12px;height:100vh;padding:12px;box-sizing:border-box}
-    .card{background:#041;padding:12px;border-left:4px solid var(--accent);border-radius:6px;overflow:auto}
-    header h1{margin:0;color:var(--accent);font-size:18px}
-    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    button{background:var(--accent);color:#000;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
-    select,input,textarea{background:#011;color:var(--fg);border:1px solid rgba(108,204,255,0.06);padding:6px;border-radius:6px}
-    #portal-screen{min-height:64px;padding:10px;background:#012;border-left:3px solid #6cf;border-radius:4px;margin-top:8px}
-    #fusion-out{white-space:pre-wrap;background:#001;border:1px solid rgba(108,204,255,0.06);padding:10px;border-radius:6px;max-height:220px;overflow:auto;margin-top:8px}
-    .canvas-wrap{background:linear-gradient(180deg,#001,#001a);border-radius:6px;padding:10px}
-    canvas{display:block;width:100%;height:420px;border-radius:6px}
-    .small{font-size:13px;color:#8f8}
-    .section-title{color:#9ff;margin-top:8px;margin-bottom:6px}
-    .panel{background:#021;padding:8px;border-radius:6px;border:1px solid rgba(108,204,255,0.03);margin-top:8px}
-    .row{display:flex;gap:8px}
-    .col{flex:1}
-    .out-box{background:#001;padding:8px;border-radius:6px;border:1px solid rgba(108,204,255,0.04);max-height:250px;overflow:auto}
-    footer{color:#6f6;margin-top:12px;font-size:12px}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CONTINIUM · PYRAMIDE · WÜRFELBILDUNG</title>
+
+<style>
+:root {
+    --bg: #0a0a12;
+    --fg: #0ff;
+    --syn: #ff6b6b;
+    --quant: #6b6bff;
+    --respo: #ffd93d;
+    --gold: #ffd700;
+    --tokio: #ff6b6b;
+    --corlu: #6bff6b;
+    --hh: #6b6bff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Consolas', monospace;
+    min-height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 6px;
+    padding: 10px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+header h1 {
+    font-size: 18px;
+    color: var(--gold);
+    text-shadow: 0 0 20px var(--gold);
+    letter-spacing: 3px;
+}
+header h1 .pyra { color: var(--tokio); }
+header h1 .cube { color: var(--corlu); }
+header h1 .quant { color: var(--quant); }
+#info-bar { font-size: 10px; color: #666; display: flex; gap: 12px; align-items: center; }
+
+main {
+    display: grid;
+    grid-template-columns: 3fr 1.2fr;
+    gap: 8px;
+    height: 100%;
+    min-height: 0;
+}
+
+#canvas-wrap {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 12px;
+    padding: 6px;
+    position: relative;
+    overflow: hidden;
+}
+#canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    display: block;
+}
+
+#panel {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    max-height: 100%;
+}
+#panel h3 { font-size: 10px; color: #666; border-bottom: 1px solid #1a1a2a; padding-bottom: 4px; }
+
+#log {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 9px;
+    color: #6a6a8a;
+    line-height: 1.4;
+    min-height: 60px;
+    max-height: 140px;
+    background: #06060a;
+    border-radius: 4px;
+    padding: 3px 5px;
+}
+#log .entry { padding: 1px 0; border-bottom: 1px solid #0a0a12; }
+#log .time { color: #444; }
+#log .msg.syn { color: var(--syn); }
+#log .msg.quant { color: var(--quant); }
+#log .msg.respo { color: var(--respo); }
+#log .msg.ok { color: #4f4; }
+#log .msg.warn { color: #ff4; }
+#log .msg.tokio { color: var(--tokio); }
+#log .msg.corlu { color: var(--corlu); }
+
+#metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3px;
+    font-size: 9px;
+}
+.metric {
+    background: #0e0e1a;
+    border-radius: 4px;
+    padding: 4px 6px;
+    text-align: center;
+    border: 1px solid #1a1a2a;
+}
+.metric .label { color: #666; font-size: 7px; text-transform: uppercase; }
+.metric .value { font-size: 14px; font-weight: bold; }
+.metric.syn .value { color: var(--syn); }
+.metric.quant .value { color: var(--quant); }
+.metric.respo .value { color: var(--respo); }
+
+#controls {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+button {
+    background: #111;
+    color: var(--fg);
+    border: 1px solid #333;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 10px;
+    transition: all 0.2s;
+}
+button:hover { background: #1a1a2a; border-color: var(--gold); }
+button:active { transform: scale(0.95); }
+button.primary { border-color: var(--gold); color: var(--gold); }
+button.primary:hover { background: var(--gold); color: #000; }
+button.syn { border-color: var(--syn); color: var(--syn); }
+button.syn:hover { background: var(--syn); color: #000; }
+button.quant { border-color: var(--quant); color: var(--quant); }
+button.quant:hover { background: var(--quant); color: #000; }
+button.respo { border-color: var(--respo); color: var(--respo); }
+button.respo:hover { background: var(--respo); color: #000; }
+button.danger { border-color: #f44; color: #f44; }
+button.danger:hover { background: #f44; color: #000; }
+button.active { border-color: var(--gold); background: var(--gold); color: #000; }
+
+/* Würfel-Animation */
+.pyramid-glow {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: #444;
+    pointer-events: none;
+    text-align: center;
+}
+
+@media (max-width: 800px) {
+    main { grid-template-columns: 1fr; }
+    #panel { max-height: 250px; }
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card" aria-labelledby="title">
-      <header><h1 id="title">WELT‑Portal • Komplett</h1><div class="small">Robustes Single‑File: Raum, Bahn, NC‑Engine, Multiskalare Pipeline, Sorgfalt 2268, Fallbacks</div></header>
 
-      <div class="section-title">Sprach‑/Room Steuerung</div>
-      <div class="controls">
-        <button data-lang="DE">Deutsch</button>
-        <button data-lang="EN">English</button>
-        <button data-lang="TR">Türkçe</button>
-        <button data-lang="ES">Español</button>
-      </div>
+<header>
+    <h1>
+        <span class="pyra">🔺 PYRAMIDE</span>
+        <span style="color:#666;">·</span>
+        <span class="cube">◈ WÜRFELBILDUNG</span>
+        <span style="color:#666;">·</span>
+        <span class="quant">⚛ CONTINIUM</span>
+    </h1>
+    <div id="info-bar">
+        <span id="clock">⏱️ --:--:--</span>
+        <span id="state-display" style="color:var(--gold);">● bereit</span>
+        <span id="cycle-display" style="color:#666;">Zyklus 0</span>
+    </div>
+</header>
 
-      <div class="panel">
-        <div class="row">
-          <div class="col">
-            <button id="btnLoadRoom">Load Room</button>
-            <button id="btnBindEden">Bind EDEN</button>
-            <button id="btnBoot">MASTER.boot</button>
-          </div>
-          <div style="width:120px">
-            <select id="tmpPreset"><option>calm</option><option>active</option><option>orbit</option><option>chaos</option></select>
-          </div>
-        </div>
-        <div id="portal-screen">Lade: DE.room …</div>
-      </div>
-
-      <div class="section-title">NC‑Canvas (Zeichnen → Interpretation)</div>
-      <div class="panel">
-        <div class="small">Zeichne im Canvas, klicke "Interpretieren". Die Engine erstellt 3×3 Masken, erweitert multiskalar (3^L), berechnet arg/xarg/arg3te pro Sprache und eine konservative Sorgfalt (2268).</div>
-        <div style="margin-top:8px">
-          <button id="btnClearDraw">Clear</button>
-          <button id="btnInterpret">Interpretieren</button>
-          <button id="btnExportJSON">Export Ergebnis</button>
-        </div>
-      </div>
-
-      <div class="section-title">Fusion & Debug</div>
-      <div class="panel">
-        <div style="font-weight:700">Fusion Output</div>
-        <pre id="fusion-out">–</pre>
-      </div>
-
-      <footer>Lokale Datei: keine externen Abhängigkeiten. Wenn gewünscht, kann ich diese Datei in dein Repo committen.</footer>
+<main>
+    <div id="canvas-wrap">
+        <canvas id="pyraCanvas"></canvas>
+        <div class="pyramid-glow">2268 · 756 · 243 · φ = 1.618</div>
     </div>
 
-    <div class="card">
-      <header><h1>RAUM — Visual + NC Canvas</h1></header>
+    <div id="panel">
+        <h3>📊 PYRAMIDE · WÜRFEL · CONTINIUM</h3>
 
-      <div class="canvas-wrap">
-        <div id="welt-visual-bg">
-          <div id="stargate" style="position:absolute;left:50%;transform:translateX(-50%);top:28px;width:260px;height:120px;border-radius:140px;border:3px solid #6cf;box-shadow:0 0 12px rgba(108,204,255,0.08);pointer-events:none"></div>
-          <canvas id="welt-canvas"></canvas>
-          <div id="hh-cube" style="position:absolute;right:20px;top:20px;width:80px;height:80px;background:linear-gradient(90deg,#0f0,#6cf);transform-origin:center;opacity:0.18;pointer-events:none"></div>
-          <div id="water-effect" style="position:absolute;bottom:0;width:100%;height:140px;background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,50,50,0.25));mix-blend-mode:screen;opacity:0.7;pointer-events:none"></div>
+        <div id="metrics">
+            <div class="metric syn">
+                <div class="label">⟳ SYN · 90°</div>
+                <div class="value" id="syn-value">0.00</div>
+            </div>
+            <div class="metric quant">
+                <div class="label">⚛ QUANT · 120°</div>
+                <div class="value" id="quant-value">0.00</div>
+            </div>
+            <div class="metric respo">
+                <div class="label">◈ RESPO · φ</div>
+                <div class="value" id="respo-value">0.00</div>
+            </div>
         </div>
-      </div>
 
-      <div class="section-title">NC‑Draw (unten rechts overlay)</div>
-      <div class="panel row" style="gap:12px">
-        <div style="flex:1">
-          <div class="small">Zeichenfläche (links) — klicke, ziehe, loslassen.</div>
-          <canvas id="draw-canvas" style="width:100%;height:260px;border-radius:6px;background:#000;border:1px solid rgba(108,204,255,0.04)"></canvas>
+        <div id="log">
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg respo">🔺 PYRAMIDE · WÜRFELBILDUNG geladen</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg tokio">🌀 2268 · Tokio-Orbit</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg corlu">🌀 756 · Corlu-Orbit</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg quant">🌀 243 · HH-Orbit</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg ok">✅ Pyramide → Würfel → Singularität</span></div>
         </div>
-        <div style="width:320px">
-          <div class="small">Ergebnisse (per Sprache & final konservativ):</div>
-          <div class="out-box" id="nc-out">keine Interpretation</div>
+
+        <div id="controls">
+            <button class="primary" id="btn-start">▶ START</button>
+            <button class="syn" id="btn-syn">⟳ SYN</button>
+            <button class="quant" id="btn-quant">⚛ QUANT</button>
+            <button class="respo" id="btn-respo">◈ RESPO</button>
+            <button class="danger" id="btn-reset">⟲ RESET</button>
+            <button id="btn-auto">▶ AUTO</button>
         </div>
-      </div>
     </div>
-  </div>
+</main>
 
 <script>
-/* ========================
-   Globals / module store
-   ======================== */
-window.WELT = window.WELT || {};
-window.WELT._modules = window.WELT._modules || {};
-window.WELT.setModule = (name, obj) => { window.WELT._modules[name] = obj; console.info('module set', name); };
-window.WELT.inject = (fnName, fn) => { window.WELT[fnName] = fn; console.info('fn injected', fnName); };
+// ============================================================
+// 1. KONSTANTEN — PYRAMIDE · WÜRFEL
+// ============================================================
+const PHI = 1.61803398875;
+const DEG_90 = Math.PI / 2;
+const DEG_120 = (2 * Math.PI) / 3;
+const DEG_180 = Math.PI;
 
-/* ================
-   Safe helpers
-   ================ */
-function safe(fn, fallback){ try{ return fn(); } catch(e){ console.warn('safe error', e); return fallback; } }
-function clamp(v,min=0,max=1){ return Math.max(min, Math.min(max, v)); }
-function mean(arr){ if(!arr.length) return 0; return arr.reduce((a,b)=>a+b,0)/arr.length; }
+// ORBIT-KONSTANTEN (aus QUANT.js)
+const ORBITS = {
+    tokio: 2268,
+    corlu: 756,
+    hh: 243
+};
 
-/* =========================
-   Minimal rum (room) module
-   (registered so index uses it reliably)
-   ========================= */
-(function registerRum(){
-  const ROOMS = {
-    'DE.room': { language:'DE', name:'Deutschland Room', pos:{x:120,y:34,z:6}, qsxi:{tokio:{x:10,y:-5},corlu:{x:-30,y:20},hh:{x:0,y:0}}, singular:{s:{radius:42}}, tmpEnergy:3 },
-    'EN.room': { language:'EN', name:'English Room', pos:{x:-40,y:80,z:1}, qsxi:{tokio:{x:3,y:6},corlu:{x:10,y:-9},hh:{x:2,y:2}}, singular:{s:{radius:12}}, tmpEnergy:1.2 },
-    'TR.room': { language:'TR', name:'Türkiye Room', pos:{x:7,y:-60,z:2}, qsxi:{tokio:{x:6,y:-2},corlu:{x:-8,y:22},hh:{x:3,y:-1}}, singular:{s:{radius:18}}, tmpEnergy:0.8 },
-    'ES.room': { language:'ES', name:'España Room', pos:{x:20,y:10,z:2}, qsxi:{tokio:{x:1,y:2},corlu:{x:0,y:0},hh:{x:0,y:0}}, singular:{s:{radius:10}}, tmpEnergy:1.0 }
-  };
-  function listRooms(){ return Object.keys(ROOMS); }
-  function loadRoom(lang){ const key = (lang==='DE')?'DE.room':(lang==='EN')?'EN.room':(lang==='TR')?'TR.room':'ES.room'; return ROOMS[key]; }
-  function loadRoomByKey(key){ return ROOMS[key] || null; }
-  window.WELT.setModule('RUM', { listRooms, loadRoom, loadRoomByKey, ROOMS });
-})();
-
-/* =========================
-   Minimal bahn (orbit) module
-   ========================= */
-(function registerBahn(){
-  function orbitTick(dt, state = {}){ state.phase = (state.phase || 0) + dt * (state.speed || 1.0); return { phase: state.phase, angle: (state.phase * 180 / Math.PI) % 360 }; }
-  function renderOrbitOnCanvas(ctx, orbit, t){ ctx.save(); ctx.translate(ctx.canvas.width/2, 130); ctx.strokeStyle = `rgba(108,204,255,${0.15 + (orbit.pulse||0)*0.6})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,orbit.radius || 110,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
-  window.WELT.setModule('BAHN', { orbitTick, renderOrbitOnCanvas });
-})();
-
-/* =========================
-   Fusion / CONTINIUM utilities (adapted)
-   ========================= */
-function DE_ROOM(){ return { epoche:{orbit0:0}, raum:{rotate3:0}, fähigkeit:{switch0:0}, vector:{axis:"X"}, opta:{optimize0:0}, sli:{open0:0} }; }
-function CONTINIUM_ROOM(){ return { pos:{x:0,y:0,z:0}, qsxi:{tokio:{},corlu:{},hh:{}}, singular:{s:{radius:0}}, tmpEnergy:0, arg:0, xarg:0, arg3te:0 }; }
-
-function WELT_ORBIT_RENDER(t){
-  return { pulse: Math.sin(t * 2) * 0.5 + 0.5, rotate: (t * 40) % 360, cubeFloat: Math.sin(t * 1.5) * 20, waterOpacity: Math.sin(t * 0.8) * 0.4 + 0.6 };
-}
-
-function FUSION_6(scene){ return { syn: scene.syn, quant: scene.quant, const: scene.const, tmp: scene.tmp, qsxi: scene.qsxi, orbit: scene.orbit }; }
-function DIM6_MATRIX(pos){ return { x:pos.x,y:pos.y,z:pos.z, drift:pos.x*0.33, slide:pos.y*0.66, sprung:pos.z*0.99 }; }
-function MAP6_ROOMS(qsxi,singular,tmp){ return { tokio:qsxi?.tokio, corlu:qsxi?.corlu, hh:qsxi?.hh, orbit: singular?.s?.radius ?? null, singular: singular?.s, tmpEnergy: tmp }; }
-function AXIS6_FACTORS(scene){ return { atom:scene.atom, qsxi:scene.qsxi, singular:scene.singular, tmpEnergy:scene.tmpEnergy, arg3te:scene.arg3te, xarg:scene.xarg }; }
-function ALGORITOMAT_6(scene){ return { ebene:FUSION_6(scene), dimension:DIM6_MATRIX(scene.pos), raum:MAP6_ROOMS(scene.qsxi, scene.singular, scene.tmpEnergy), faktor:AXIS6_FACTORS(scene) }; }
-function FUSION_6_TO_3(alg){ return { A:alg.dimension, B:alg.faktor, C:alg.raum }; }
-function FUSION_3_TO_1(f3){ return { unity:{ move:f3.A, energy:f3.B, geo:f3.C } }; }
-function FUSION_1_TO_0(f1){ return { zeroPoint:true, all:f1.unity }; }
-function FUSION_0_TO_ALL(zero){ return { ALL:zero.all, state:"CONTINIUM-UNIFIED" }; }
-function CONTINIUM_ALGORITOMAT(scene){ const alg6=ALGORITOMAT_6(scene); const f3=FUSION_6_TO_3(alg6); const f1=FUSION_3_TO_1(f3); const f0=FUSION_1_TO_0(f1); return FUSION_0_TO_ALL(f0); }
-
-/* =========================
-   NC Engine: drawing -> 3x3 mask -> multiscale pipeline
-   ========================= */
-const G = 3; // base constant 3
-
-function onesTile(base = G){ return Array.from({length:base},()=>Array.from({length:base},()=>1)); }
-
-function kroneckerExpand(smallMatrix, tileMatrix){
-  const m = smallMatrix.length, n = smallMatrix[0].length;
-  const tm = tileMatrix.length, tn = tileMatrix[0].length;
-  const out = [];
-  for(let i=0;i<m;i++){
-    for(let ii=0; ii<tm; ii++){
-      const row = [];
-      for(let j=0;j<n;j++){
-        for(let jj=0;jj<tn;jj++){
-          row.push(smallMatrix[i][j] * tileMatrix[ii][jj]);
-        }
-      }
-      out.push(row);
-    }
-  }
-  return out;
-}
-
-function expandToLevel(baseMatrix, levels=2, base=G){
-  let mat = baseMatrix;
-  for(let k=1;k<levels;k++){
-    const tile = onesTile(base);
-    mat = kroneckerExpand(mat, tile);
-  }
-  return mat;
-}
-
-function aggregateMatrixStats(mat){
-  const rows = mat.length, cols = mat[0].length;
-  let sum=0, cnt=0, max=-Infinity, min=Infinity;
-  for(let r=0;r<rows;r++){
-    for(let c=0;c<cols;c++){
-      const v = Number(mat[r][c]) || 0;
-      sum += v; cnt++;
-      if(v>max) max=v;
-      if(v<min) min=v;
-    }
-  }
-  const meanVal = cnt?sum/cnt:0;
-  return { rows, cols, mean:meanVal, max, min, count:cnt };
-}
-
-function mapScaleToTMP(size){
-  if(size <= 3) return 'calm';
-  if(size <= 9) return 'active';
-  if(size <= 27) return 'orbit';
-  return 'chaos';
-}
-
-/* compute per-language scores (similar to Sorgfalt) */
-const LANGS = ['DE','TR','EN','ES'];
-const TMP_PRESETS = { calm:{qiBias:0.6,iqqBias:0.3}, active:{qiBias:0.7,iqqBias:0.25}, orbit:{qiBias:0.65,iqqBias:0.35}, chaos:{qiBias:0.5,iqqBias:0.5} };
-
-function computePerLangFromMask(mask3x3, presetName, resps, qiBase, iqqBase){
-  const preset = TMP_PRESETS[presetName] || TMP_PRESETS.calm;
-  const qi = clamp(qiBase * 0.7 + preset.qiBias*0.3);
-  const iqq = clamp(iqqBase * 0.7 + preset.iqqBias*0.3);
-  const confs = resps.map(r=>r.conf);
-  const base = mean(confs);
-  const maxc = Math.max(...confs);
-  const minc = Math.min(...confs);
-  const variance = maxc - minc;
-  const combined = clamp(qi*base + (1 - iqq)*maxc);
-  const arg = Number(combined.toFixed(4));
-  const xarg = Number(variance.toFixed(4));
-  const arg3te = Number((combined * (1 - variance)).toFixed(4));
-  return { mask3x3, preset: presetName, qi, iqq, base, maxc, minc, variance, arg, xarg, arg3te };
-}
-
-function aggregateConservative(perLangResults){
-  const args = perLangResults.map(p=>p.arg);
-  const xargs = perLangResults.map(p=>p.xarg);
-  const arg3s = perLangResults.map(p=>p.arg3te);
-  const finalArg = Number(Math.min(...args).toFixed(4));
-  const finalXarg = Number(Math.max(...xargs).toFixed(4));
-  const finalArg3te = Number(Math.min(...arg3s).toFixed(4));
-  let rec = `Konservative Sorgfaltsbewertung für Punkt 2268:\n- arg: ${finalArg}\n- xarg (Unsicherheit): ${finalXarg}\n- arg3te: ${finalArg3te}\n\nEmpfehlung: `;
-  if(finalArg3te >= 0.75) rec += "Hohe Zuversicht — Ergebnis nutzbar.";
-  else if(finalArg3te >= 0.5) rec += "Mittlere Zuversicht — ergänzende Prüfung empfohlen.";
-  else rec += "Niedrige Zuversicht — weitere Daten/Experten erforderlich.";
-  return { finalArg, finalXarg, finalArg3te, recommendation: rec };
-}
-
-/* =========================
-   Visual / Canvas setup & orbit RAF
-   ========================= */
-const canvas = document.getElementById('welt-canvas');
+// ============================================================
+// 2. CANVAS SETUP — 3D PYRAMIDE
+// ============================================================
+const canvas = document.getElementById('pyraCanvas');
 const ctx = canvas.getContext('2d');
-function setupCanvasDPR(cv, ctx){
-  function resize(){
-    const dpr = window.devicePixelRatio || 1;
-    cv.style.width = window.innerWidth + 'px';
-    cv.style.height = (window.innerHeight - 180) + 'px';
-    cv.width = Math.floor(window.innerWidth * dpr);
-    cv.height = Math.floor((window.innerHeight - 180) * dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
-  window.addEventListener('resize', resize);
-  resize();
-}
-setupCanvasDPR(canvas, ctx);
+let W, H, cx, cy, scale;
 
-function applyOrbit(orbit){
-  const stargate = document.getElementById("stargate");
-  const water = document.getElementById("water-effect");
-  const cube = document.getElementById("hh-cube");
-  if(stargate) stargate.style.boxShadow = `0 0 ${((orbit.pulse||0) * 40)}px #00aaff`;
-  if(water) water.style.opacity = (orbit.waterOpacity==null?0.7:orbit.waterOpacity);
-  if(cube) cube.style.transform = `translate(-50%, -50%) rotate(${orbit.rotate||0}deg) translateY(${orbit.cubeFloat||0}px)`;
-  const bg = document.getElementById('welt-visual-bg');
-  if(bg) bg.style.backgroundPosition = `${(orbit.rotate||0)%360}px ${(orbit.pulse||0)*20}px`;
+function resizeCanvas() {
+    const wrap = document.getElementById('canvas-wrap');
+    const rect = wrap.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    W = canvas.width;
+    H = canvas.height;
+    cx = W / 2;
+    cy = H / 2;
+    scale = Math.min(W, H) * 0.35;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ============================================================
+// 3. 3D-HELFER (PYRAMIDE → WÜRFEL)
+// ============================================================
+function rotate3D(x, y, z, rotX, rotY, rotZ) {
+    // Rotation um X
+    let y1 = y * Math.cos(rotX) - z * Math.sin(rotX);
+    let z1 = y * Math.sin(rotX) + z * Math.cos(rotX);
+    // Rotation um Y
+    let x1 = x * Math.cos(rotY) + z1 * Math.sin(rotY);
+    let z2 = -x * Math.sin(rotY) + z1 * Math.cos(rotY);
+    // Rotation um Z
+    let x2 = x1 * Math.cos(rotZ) - y1 * Math.sin(rotZ);
+    let y2 = x1 * Math.sin(rotZ) + y1 * Math.cos(rotZ);
+    return { x: x2, y: y2, z: z2 };
 }
 
-/* orbit RAF uses bahn module if present */
-(function orbitRAF(){
-  const BAHN = window.WELT._modules.BAHN;
-  function draw(now){
-    const t = now * 0.001;
-    const orbit = WELT_ORBIT_RENDER(t);
-    applyOrbit(orbit);
-    // canvas draw
-    canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    const bahn = window.WELT._modules.BAHN;
-    if(bahn && typeof bahn.renderOrbitOnCanvas === 'function'){
-      bahn.renderOrbitOnCanvas(ctx, { pulse: orbit.pulse, radius: 110 }, t);
-    } else {
-      ctx.save(); ctx.translate(canvas.width/2, 130); ctx.strokeStyle = `rgba(108,204,255,${0.15 + orbit.pulse*0.6})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,110,0,Math.PI*2); ctx.stroke(); ctx.restore();
+function project(x, y, z, scale) {
+    const dist = 800;
+    const fov = 400;
+    const factor = fov / (fov + z + dist);
+    return {
+        x: cx + x * scale * factor,
+        y: cy + y * scale * factor,
+        factor: factor
+    };
+}
+
+// ============================================================
+// 4. PYRAMIDE · WÜRFEL-GENERATOR
+// ============================================================
+function generatePyramid(level, rot) {
+    const size = Math.pow(3, level) * 0.5;
+    const points = [];
+
+    // Basis (Quadrat)
+    const basePoints = [
+        { x: -size, y: -size, z: -size },
+        { x: size, y: -size, z: -size },
+        { x: size, y: -size, z: size },
+        { x: -size, y: -size, z: size }
+    ];
+
+    // Spitze der Pyramide (oben)
+    const apex = { x: 0, y: size * 1.5, z: 0 };
+
+    // Basis-Rand
+    for (let i = 0; i < 4; i++) {
+        const p1 = basePoints[i];
+        const p2 = basePoints[(i + 1) % 4];
+        points.push({ x1: p1.x, y1: p1.y, z1: p1.z, x2: p2.x, y2: p2.y, z2: p2.z, type: 'base' });
     }
-    requestAnimationFrame(draw);
-  }
-  requestAnimationFrame(draw);
-})();
 
-/* =========================
-   Room / UI wiring
-   ========================= */
-const portalButtons = document.querySelectorAll('[data-lang]');
-portalButtons.forEach(b => b.addEventListener('click', ()=> { const lang = b.getAttribute('data-lang'); window.WELT_CURRENT_LANGUAGE = lang; loadLanguageRoom(lang); }));
-document.getElementById('btnLoadRoom').addEventListener('click', ()=> loadLanguageRoom(window.WELT_CURRENT_LANGUAGE));
-document.getElementById('btnBindEden').addEventListener('click', ()=> { const room = window._CURRENT_ROOM || window.WELT._modules.RUM.loadRoom('DE'); document.getElementById('fusion-out').textContent = JSON.stringify({ eden: { bind: room, state:'EDEN-ACTIVE' } }, null, 2); });
-document.getElementById('btnBoot').addEventListener('click', ()=> { const de = window._CURRENT_ROOM || window.WELT._modules.RUM.loadRoom('DE'); const cont = CONTINIUM_ROOM(); cont.pos = de.pos; cont.qsxi = de.qsxi; cont.singular = de.singular; cont.tmpEnergy = de.tmpEnergy; const eden = { eden:{ anchor:0, bind:de }}; const boot = { boot:{ de, continium:cont, eden, state:"MASTER-BOOT-OK" } }; document.getElementById('fusion-out').textContent = JSON.stringify(boot, null, 2); });
+    // Kanten zur Spitze
+    for (const p of basePoints) {
+        points.push({ x1: p.x, y1: p.y, z1: p.z, x2: apex.x, y2: apex.y, z2: apex.z, type: 'edge' });
+    }
 
-function loadLanguageRoom(lang){
-  document.getElementById('portal-screen').textContent = 'Lade: ' + lang + ' …';
-  setTimeout(()=> {
-    const RUM = window.WELT._modules.RUM;
-    const room = (RUM && RUM.loadRoom) ? safe(()=>RUM.loadRoom(lang), null) : null;
-    const r = room || DE_ROOM();
-    window._CURRENT_ROOM = r;
-    document.getElementById('portal-screen').textContent = `Room geladen: ${r.name || 'unknown'} (lang=${r.language||lang})`;
-    const scene = { t:(Date.now()- (window.WELT_STARTED_AT||Date.now()))/1000, de: r, cont: CONTINIUM_ROOM(), out: null };
-    const welt = WELT_FUSION(scene);
-    document.getElementById('fusion-out').textContent = JSON.stringify(welt, null, 2);
-  }, 200);
+    // Würfel-Ecken (zusätzlich für WÜRFELBILDUNG)
+    const cubeCorners = [
+        { x: -size, y: -size, z: -size },
+        { x: size, y: -size, z: -size },
+        { x: size, y: -size, z: size },
+        { x: -size, y: -size, z: size },
+        { x: -size, y: size, z: -size },
+        { x: size, y: size, z: -size },
+        { x: size, y: size, z: size },
+        { x: -size, y: size, z: size }
+    ];
+
+    // Würfel-Kanten
+    const cubeEdges = [
+        [0,1], [1,2], [2,3], [3,0],
+        [4,5], [5,6], [6,7], [7,4],
+        [0,4], [1,5], [2,6], [3,7]
+    ];
+
+    for (const [i, j] of cubeEdges) {
+        const p1 = cubeCorners[i];
+        const p2 = cubeCorners[j];
+        points.push({ x1: p1.x, y1: p1.y, z1: p1.z, x2: p2.x, y2: p2.y, z2: p2.z, type: 'cube' });
+    }
+
+    // Rotieren
+    const rotated = points.map(p => {
+        const r1 = rotate3D(p.x1, p.y1, p.z1, rot.x, rot.y, rot.z);
+        const r2 = rotate3D(p.x2, p.y2, p.z2, rot.x, rot.y, rot.z);
+        return { ...p, x1: r1.x, y1: r1.y, z1: r1.z, x2: r2.x, y2: r2.y, z2: r2.z };
+    });
+
+    return rotated;
 }
 
-/* =========================
-   Drawing canvas (NC) setup
-   ========================= */
-const drawCanvas = document.getElementById('draw-canvas');
-const dctx = drawCanvas.getContext('2d');
-function setupDrawCanvas(){
-  const rect = drawCanvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  drawCanvas.width = Math.floor(rect.width * dpr);
-  drawCanvas.height = Math.floor(rect.height * dpr);
-  dctx.setTransform(dpr,0,0,dpr,0,0);
-  dctx.fillStyle = '#000'; dctx.fillRect(0,0,rect.width,rect.height);
-  dctx.strokeStyle = '#6cf'; dctx.lineWidth = 3;
-}
-function clearDraw(){ setupDrawCanvas(); strokes = []; redrawStrokes(); }
-let drawing = false, strokes = [];
-let currentStroke = null;
-function startStroke(x,y){ currentStroke = [{x,y}]; drawing=true; }
-function pushPoint(x,y){ if(!drawing) return; currentStroke.push({x,y}); redrawStrokes(); }
-function endStroke(){ if(!drawing) return; strokes.push(currentStroke); currentStroke=null; drawing=false; }
+// ============================================================
+// 5. STATE
+// ============================================================
+const state = {
+    running: false,
+    paused: false,
+    autoMode: false,
+    cycle: 0,
+    t: 0,
+    synValue: 0.5,
+    quantValue: 0.5,
+    respoValue: 0.5,
+    rotX: 0,
+    rotY: 0,
+    rotZ: 0,
+    level: 2, // 3^2 = 9
+    orbits: {
+        tokio: 0,
+        corlu: 0,
+        hh: 0
+    },
+    pyramidPoints: [],
+    showCube: true,
+    showPyramid: true
+};
 
-function redrawStrokes(){
-  const w = drawCanvas.clientWidth, h = drawCanvas.clientHeight;
-  dctx.clearRect(0,0,w,h);
-  dctx.fillStyle='#000'; dctx.fillRect(0,0,w,h);
-  dctx.strokeStyle = '#6cf'; dctx.lineWidth = 3; dctx.lineJoin='round'; dctx.lineCap='round';
-  strokes.forEach(s => {
-    dctx.beginPath();
-    s.forEach((p,i)=> i? dctx.lineTo(p.x,p.y) : dctx.moveTo(p.x,p.y));
-    dctx.stroke();
-  });
-  if(currentStroke){
-    dctx.beginPath();
-    currentStroke.forEach((p,i)=> i? dctx.lineTo(p.x,p.y) : dctx.moveTo(p.x,p.y));
-    dctx.stroke();
-  }
-}
-
-// events (mouse & touch)
-function getPos(e){
-  const r = drawCanvas.getBoundingClientRect();
-  if(e.touches && e.touches[0]) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
-  return { x: e.clientX - r.left, y: e.clientY - r.top };
-}
-drawCanvas.addEventListener('mousedown', (e)=> { const p = getPos(e); startStroke(p.x,p.y); });
-drawCanvas.addEventListener('mousemove', (e)=> { if(!drawing) return; const p = getPos(e); pushPoint(p.x,p.y); });
-window.addEventListener('mouseup', ()=> endStroke());
-drawCanvas.addEventListener('touchstart',(e)=>{ const p=getPos(e); startStroke(p.x,p.y); e.preventDefault(); });
-drawCanvas.addEventListener('touchmove',(e)=>{ const p=getPos(e); pushPoint(p.x,p.y); e.preventDefault(); });
-drawCanvas.addEventListener('touchend',(e)=> endStroke());
-
-window.addEventListener('resize', setupDrawCanvas);
-setupDrawCanvas();
-
-/* =========================
-   Convert strokes -> 3x3 mask (density)
-   ========================= */
-function strokesTo3x3Mask(strokes, canvasEl){
-  const w = canvasEl.clientWidth, h = canvasEl.clientHeight;
-  const cells = Array.from({length:3},()=>Array.from({length:3},()=>0));
-  // discretize each point
-  strokes.forEach(s => s.forEach(p=>{
-    const cx = Math.floor(3 * (p.x / w)); const cy = Math.floor(3 * (p.y / h));
-    const ix = clamp(cx,0,2), iy = clamp(cy,0,2);
-    cells[iy][ix] += 1;
-  }));
-  // normalize to 0..1 by max cell count
-  let max = 0; for(let r=0;r<3;r++) for(let c=0;c<3;c++) max = Math.max(max, cells[r][c]);
-  if(max === 0) return Array.from({length:3},()=>Array.from({length:3},()=>0));
-  for(let r=0;r<3;r++) for(let c=0;c<3;c++) cells[r][c] = Number((cells[r][c] / max).toFixed(3));
-  return cells;
+// ============================================================
+// 6. LOG
+// ============================================================
+function log(msg, type = 'info') {
+    const logDiv = document.getElementById('log');
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+    const time = new Date().toLocaleTimeString();
+    const cls = type === 'ok' ? 'ok' : type === 'err' ? 'err' : type === 'warn' ? 'warn' :
+                type === 'syn' ? 'syn' : type === 'quant' ? 'quant' : type === 'respo' ? 'respo' :
+                type === 'tokio' ? 'tokio' : type === 'corlu' ? 'corlu' : '';
+    entry.innerHTML = `<span class="time">[${time}]</span> <span class="msg ${cls}">${msg}</span>`;
+    logDiv.appendChild(entry);
+    logDiv.scrollTop = logDiv.scrollHeight;
+    while (logDiv.children.length > 100) logDiv.removeChild(logDiv.firstChild);
 }
 
-/* =========================
-   Interpretation flow (Interpretieren button)
-   ========================= */
-function formatMatrix(mat){
-  return mat.map(row=>row.map(v=>v.toFixed(3)).join(' ')).join('\n');
+// ============================================================
+// 7. RESPO · SYN · QUANT
+// ============================================================
+function computeRespo(synVal, quantVal) {
+    const raw = (synVal + quantVal) / PHI;
+    return Math.min(1, Math.max(0, raw * (1 + state.cycle * 0.005)));
 }
 
-function computeInterpretation(){
-  const preset = document.getElementById('tmpPreset').value;
-  // three default respos (user could be extended)
-  const resps = [
-    { text: 'Respo 1', conf: 0.7 },
-    { text: 'Respo 2', conf: 0.5 },
-    { text: 'Respo 3', conf: 0.3 }
-  ];
-  // allow QI/IQQ derived from preset blends (simple)
-  const qiBase = 0.65, iqqBase = 0.35;
+// ============================================================
+// 8. RENDER — PYRAMIDE · WÜRFEL
+// ============================================================
+function render() {
+    if (state.paused) {
+        requestAnimationFrame(render);
+        return;
+    }
 
-  const mask3x3 = strokesTo3x3Mask(strokes, drawCanvas);
-  // compute per-language
-  const perLang = LANGS.map(lang => computePerLangFromMask(mask3x3, preset, resps, qiBase, iqqBase));
-  const agg = aggregateConservative(perLang);
+    ctx.clearRect(0, 0, W, H);
 
-  // also perform multiscale pipeline from base mask: levels=3 (3,9,27)
-  // for numerical simplicity, convert mask3x3 to numeric base matrix (use averages)
-  const numericBase = mask3x3;
-  const multiscaleResults = [];
-  for(let L=1; L<=3; L++){
-    const mat = expandToLevel(numericBase, L, G);
-    const stats = aggregateMatrixStats(mat);
-    const tmp = mapScaleToTMP(Math.pow(G,L));
-    const levelScore = Number((stats.mean * 0.7).toFixed(4)); // demo weight
-    multiscaleResults.push({ level:L, size:Math.pow(G,L), stats, tmp, levelScore });
-  }
+    // Hintergrund
+    const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, W * 0.6);
+    grad.addColorStop(0, '#0a0a1a');
+    grad.addColorStop(1, '#000');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
 
-  const payload = {
-    timestamp: new Date().toISOString(),
-    preset, mask3x3, maskText: formatMatrix(mask3x3),
-    perLang, agg, multiscaleResults
-  };
+    // Gitter (3-9-27)
+    drawGrid();
 
-  // display results
-  document.getElementById('nc-out').textContent = perLang.map(p => `${p.preset} ${p.arg} / ${p.xarg} / ${p.arg3te}`).join('\n') + '\n\n' + agg.recommendation;
-  document.getElementById('fusion-out').textContent = JSON.stringify(payload, null, 2);
+    // Orbits (2268, 756, 243)
+    drawOrbits();
 
-  // save locally under key 'sorgfalt:2268' as convenience
-  localStorage.setItem('sorgfalt:2268', JSON.stringify(payload));
-  return payload;
+    // PYRAMIDE + WÜRFEL
+    const rot = { x: state.rotX, y: state.rotY, z: state.rotZ };
+    const points = generatePyramid(state.level, rot);
+
+    // Zeichne Basis (Pyramide) — rot
+    for (const p of points) {
+        if (p.type === 'base') {
+            const p1 = project(p.x1, p.y1, p.z1, scale * 0.6);
+            const p2 = project(p.x2, p.y2, p.z2, scale * 0.6);
+            ctx.strokeStyle = `rgba(255, 107, 107, ${0.4 + state.synValue * 0.4})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+        }
+    }
+
+    // Zeichne Kanten zur Spitze (Pyramide) — gelb
+    for (const p of points) {
+        if (p.type === 'edge') {
+            const p1 = project(p.x1, p.y1, p.z1, scale * 0.6);
+            const p2 = project(p.x2, p.y2, p.z2, scale * 0.6);
+            ctx.strokeStyle = `rgba(255, 217, 61, ${0.3 + state.respoValue * 0.5})`;
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 6]);
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+    }
+
+    // Zeichne Würfel-Kanten — blau
+    for (const p of points) {
+        if (p.type === 'cube') {
+            const p1 = project(p.x1, p.y1, p.z1, scale * 0.6);
+            const p2 = project(p.x2, p.y2, p.z2, scale * 0.6);
+            ctx.strokeStyle = `rgba(107, 107, 255, ${0.2 + state.quantValue * 0.5})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+
+            // Ecken markieren
+            ctx.fillStyle = `rgba(107, 107, 255, ${0.3 + state.quantValue * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(p1.x, p1.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // RESPO-Kern (Mitte)
+    drawRespoCore();
+
+    // Metriken aktualisieren
+    document.getElementById('syn-value').textContent = state.synValue.toFixed(3);
+    document.getElementById('quant-value').textContent = state.quantValue.toFixed(3);
+    document.getElementById('respo-value').textContent = state.respoValue.toFixed(3);
+
+    // Rotation
+    if (state.running) {
+        state.rotX += 0.003;
+        state.rotY += 0.005;
+        state.rotZ += 0.001;
+        state.t += 0.01;
+        // Orbits
+        state.orbits.tokio += 0.002;
+        state.orbits.corlu += 0.003;
+        state.orbits.hh += 0.005;
+    }
+
+    requestAnimationFrame(render);
+}
+render();
+
+// ============================================================
+// 9. ZEICHEN-FUNKTIONEN
+// ============================================================
+function drawGrid() {
+    const sizes = [3, 9, 27];
+    const colors = ['#0ff3', '#f0f3', '#ff03'];
+    const r = Math.min(W, H) * 0.3;
+    sizes.forEach((size, idx) => {
+        const spacing = r * 0.06 * (27 / size);
+        const offset = (size - 1) * spacing / 2;
+        ctx.strokeStyle = colors[idx];
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i < size; i++) {
+            const pos = -offset + i * spacing;
+            ctx.beginPath();
+            ctx.moveTo(cx + pos, cy - offset);
+            ctx.lineTo(cx + pos, cy + offset);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(cx - offset, cy + pos);
+            ctx.lineTo(cx + offset, cy + pos);
+            ctx.stroke();
+        }
+    });
 }
 
-/* UI buttons */
-document.getElementById('btnInterpret').addEventListener('click', ()=> computeInterpretation());
-document.getElementById('btnClearDraw').addEventListener('click', ()=> { strokes = []; currentStroke=null; clearDraw(); document.getElementById('nc-out').textContent = 'cleared'; });
-document.getElementById('btnExportJSON').addEventListener('click', ()=>{
-  const data = computeInterpretation();
-  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'interpretation-2268.json'; a.click(); URL.revokeObjectURL(url);
+function drawOrbits() {
+    // Tokio (2268) — groß, rot
+    const t = state.orbits.tokio;
+    const r1 = Math.min(W, H) * 0.32;
+    ctx.strokeStyle = `rgba(255, 107, 107, ${0.1 + state.synValue * 0.2})`;
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 8]);
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(t) * r1 * 0.1, cy + Math.sin(t) * r1 * 0.1, r1 * 0.9, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = `rgba(255, 107, 107, ${0.3 + state.synValue * 0.3})`;
+    ctx.font = '8px Consolas';
+    ctx.textAlign = 'center';
+    ctx.fillText('2268', cx + Math.cos(t) * r1 * 0.9, cy + Math.sin(t) * r1 * 0.9);
+
+    // Corlu (756) — grün
+    const r2 = Math.min(W, H) * 0.22;
+    ctx.strokeStyle = `rgba(107, 255, 107, ${0.1 + state.quantValue * 0.2})`;
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 8]);
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(t * 1.3) * r2 * 0.1, cy + Math.sin(t * 1.3) * r2 * 0.1, r2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = `rgba(107, 255, 107, ${0.3 + state.quantValue * 0.3})`;
+    ctx.fillText('756', cx + Math.cos(t * 1.3) * r2, cy + Math.sin(t * 1.3) * r2);
+
+    // HH (243) — blau
+    const r3 = Math.min(W, H) * 0.12;
+    ctx.strokeStyle = `rgba(107, 107, 255, ${0.1 + state.respoValue * 0.2})`;
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 8]);
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(t * 1.7) * r3 * 0.1, cy + Math.sin(t * 1.7) * r3 * 0.1, r3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = `rgba(107, 107, 255, ${0.3 + state.respoValue * 0.3})`;
+    ctx.fillText('243', cx + Math.cos(t * 1.7) * r3, cy + Math.sin(t * 1.7) * r3);
+}
+
+function drawRespoCore() {
+    const val = state.respoValue;
+    const coreRadius = 8 + val * 25;
+
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius + 25);
+    glow.addColorStop(0, `rgba(255, 217, 61, ${0.3 + val * 0.5})`);
+    glow.addColorStop(0.5, `rgba(255, 217, 61, ${0.1 + val * 0.2})`);
+    glow.addColorStop(1, 'rgba(255, 217, 61, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, coreRadius + 25, 0, Math.PI * 2);
+    ctx.fill();
+
+    const coreGrad = ctx.createRadialGradient(cx - 3, cy - 3, 0, cx, cy, coreRadius);
+    coreGrad.addColorStop(0, `rgba(255, 217, 61, ${0.9 + val * 0.1})`);
+    coreGrad.addColorStop(0.7, `rgba(255, 200, 50, ${0.6 + val * 0.3})`);
+    coreGrad.addColorStop(1, `rgba(255, 180, 30, ${0.3 + val * 0.2})`);
+    ctx.fillStyle = coreGrad;
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 20 + val * 30;
+    ctx.beginPath();
+    ctx.arc(cx, cy, coreRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#000';
+    ctx.font = `bold ${10 + val * 10}px Consolas`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('◈', cx, cy - 1);
+
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + val * 0.5})`;
+    ctx.font = '8px Consolas';
+    ctx.fillText(`φ = ${state.respoValue.toFixed(3)}`, cx, cy + coreRadius + 14);
+}
+
+// ============================================================
+// 10. CONTROLS
+// ============================================================
+document.getElementById('btn-start').addEventListener('click', function() {
+    state.running = !state.running;
+    this.textContent = state.running ? '⏸ STOP' : '▶ START';
+    document.getElementById('state-display').textContent = state.running ? '● läuft' : '● gestoppt';
+    document.getElementById('state-display').style.color = state.running ? 'var(--gold)' : '#666';
+    log(state.running ? '▶ Pyramide gestartet' : '⏸ Pyramide gestoppt', state.running ? 'ok' : 'warn');
 });
 
-/* initial sample stroke for ease */
-(function seed(){
-  // draw a small cross for demo
-  const w = drawCanvas.clientWidth, h = drawCanvas.clientHeight;
-  const cx = w*0.5, cy = h*0.5;
-  strokes = [
-    [{x:cx-60,y:cy-60},{x:cx+60,y:cy+60}],
-    [{x:cx-60,y:cy+60},{x:cx+60,y:cy-60}],
-    [{x:cx,y:cy-100},{x:cx,y:cy+100}]
-  ];
-  redrawStrokes();
-})();
+document.getElementById('btn-syn').addEventListener('click', function() {
+    state.synValue = Math.min(1, state.synValue + 0.1);
+    state.respoValue = computeRespo(state.synValue, state.quantValue);
+    log(`⟳ SYN auf ${state.synValue.toFixed(2)} verstärkt`, 'syn');
+});
 
-/* expose simple API for cross-repo injection */
-window.WELT.getLastInterpretation = ()=> {
-  try { return JSON.parse(localStorage.getItem('sorgfalt:2268')); } catch(e){ return null; }
-};
-window.WELT.computeInterpretation = computeInterpretation;
+document.getElementById('btn-quant').addEventListener('click', function() {
+    state.quantValue = Math.min(1, state.quantValue + 0.1);
+    state.respoValue = computeRespo(state.synValue, state.quantValue);
+    log(`⚛ QUANT auf ${state.quantValue.toFixed(2)} verstärkt`, 'quant');
+});
 
-/* final log */
-console.info('Complete index loaded — self-contained WELT demo (rum & bahn inline).');
+document.getElementById('btn-respo').addEventListener('click', function() {
+    state.respoValue = computeRespo(state.synValue, state.quantValue);
+    log(`◈ RESPO neu berechnet: ${state.respoValue.toFixed(3)}`, 'respo');
+});
+
+document.getElementById('btn-reset').addEventListener('click', function() {
+    state.running = false;
+    state.paused = false;
+    state.cycle = 0;
+    state.t = 0;
+    state.synValue = 0.5;
+    state.quantValue = 0.5;
+    state.respoValue = 0.5;
+    state.rotX = 0;
+    state.rotY = 0;
+    state.rotZ = 0;
+    state.orbits = { tokio: 0, corlu: 0, hh: 0 };
+    document.getElementById('btn-start').textContent = '▶ START';
+    document.getElementById('state-display').textContent = '● reset';
+    document.getElementById('state-display').style.color = '#f44';
+    document.getElementById('cycle-display').textContent = 'Zyklus 0';
+    document.getElementById('syn-value').textContent = '0.500';
+    document.getElementById('quant-value').textContent = '0.500';
+    document.getElementById('respo-value').textContent = '0.500';
+    log('⟲ RESET — Pyramide zurückgesetzt', 'warn');
+});
+
+document.getElementById('btn-auto').addEventListener('click', function() {
+    state.autoMode = !state.autoMode;
+    this.textContent = state.autoMode ? '⏸ PAUSE' : '▶ AUTO';
+    if (state.autoMode) {
+        log('▶ AUTO-Modus — Pyramide atmet', 'warn');
+        state.running = true;
+        document.getElementById('btn-start').textContent = '⏸ STOP';
+        document.getElementById('state-display').textContent = '● auto';
+        document.getElementById('state-display').style.color = 'var(--gold)';
+        if (window.autoInterval) clearInterval(window.autoInterval);
+        window.autoInterval = setInterval(function() {
+            state.cycle++;
+            document.getElementById('cycle-display').textContent = 'Zyklus ' + state.cycle;
+            state.synValue = 0.3 + 0.6 * (0.5 + 0.5 * Math.sin(state.cycle * 0.3));
+            state.quantValue = 0.3 + 0.6 * (0.5 + 0.5 * Math.cos(state.cycle * 0.25));
+            state.respoValue = computeRespo(state.synValue, state.quantValue);
+            state.level = 1 + (state.cycle % 3); // 3^1, 3^2, 3^3
+            log(`🔄 Zyklus ${state.cycle}: Level=${state.level} SYN=${state.synValue.toFixed(2)} QUANT=${state.quantValue.toFixed(2)} RESPO=${state.respoValue.toFixed(2)}`, 'warn');
+        }, 3000);
+    } else {
+        clearInterval(window.autoInterval);
+        log('⏸ AUTO-Modus pausiert', 'warn');
+        document.getElementById('state-display').textContent = '● pausiert';
+        document.getElementById('state-display').style.color = '#ff4';
+    }
+});
+
+// ============================================================
+// 11. TASTATUR
+// ============================================================
+document.addEventListener('keydown', function(e) {
+    if (e.key === ' ') { e.preventDefault(); document.getElementById('btn-start').click(); }
+    if (e.key === 's' || e.key === 'S') document.getElementById('btn-syn').click();
+    if (e.key === 'q' || e.key === 'Q') document.getElementById('btn-quant').click();
+    if (e.key === 'r' || e.key === 'R') document.getElementById('btn-respo').click();
+    if (e.key === 'x' || e.key === 'X') document.getElementById('btn-reset').click();
+    if (e.key === 'a' || e.key === 'A') document.getElementById('btn-auto').click();
+});
+
+// ============================================================
+// 12. UHR
+// ============================================================
+function updateClock() {
+    document.getElementById('clock').textContent = '⏱️ ' + new Date().toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================================================
+// 13. INIT
+// ============================================================
+log('🔺 PYRAMIDE · WÜRFELBILDUNG — CONTINIUM', 'respo');
+log('🌀 2268 = Tokio-Orbit (Ursache)', 'tokio');
+log('🌀 756 = Corlu-Orbit (Wirkung)', 'corlu');
+log('🌀 243 = HH-Orbit (Verschränkung)', 'quant');
+log('◈ RESPO = (SYN + QUANT) / φ', 'respo');
+log('⌨️  space=Start  s=SYN  q=QUANT  r=RESPO  x=Reset  a=Auto', 'ok');
+
+console.log('🔺 PYRAMIDE · WÜRFELBILDUNG — CONTINIUM');
+console.log('🌀 2268 = Tokio-Orbit');
+console.log('🌀 756 = Corlu-Orbit');
+console.log('🌀 243 = HH-Orbit');
+console.log('⌨️  space=Start  s=SYN  q=QUANT  r=RESPO  x=Reset  a=Auto');
+
+// Automatisch starten
+setTimeout(function() {
+    state.running = true;
+    document.getElementById('btn-start').textContent = '⏸ STOP';
+    document.getElementById('state-display').textContent = '● läuft';
+    document.getElementById('state-display').style.color = 'var(--gold)';
+    log('▶ Pyramide automatisch gestartet', 'ok');
+}, 500);
 </script>
 </body>
 </html>
