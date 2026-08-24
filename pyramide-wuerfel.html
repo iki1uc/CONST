@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔺 PYRAMIDE · WÜRFELBILDUNGS-ENGINE</title>
+
+<style>
+:root {
+    --bg: #0a0a12;
+    --fg: #0ff;
+    --gold: #ffd700;
+    --syn: #ff6b6b;
+    --quant: #6b6bff;
+    --respo: #ffd93d;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Consolas', monospace;
+    min-height: 100vh;
+    padding: 20px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 12px;
+}
+
+header {
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+header h1 { color: var(--gold); font-size: 20px; letter-spacing: 3px; }
+header h1 .pyra { color: var(--syn); }
+header h1 .cube { color: var(--quant); }
+#clock { font-size: 12px; color: #666; }
+
+main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+}
+
+#visual {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 400px;
+}
+
+#panel {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+}
+.metric {
+    background: #0e0e1a;
+    border: 1px solid #1a1a2a;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+}
+.metric .label { color: #666; font-size: 8px; text-transform: uppercase; }
+.metric .value { font-size: 18px; font-weight: bold; }
+.metric.syn .value { color: var(--syn); }
+.metric.quant .value { color: var(--quant); }
+.metric.respo .value { color: var(--respo); }
+
+#log {
+    background: #06060a;
+    border-radius: 6px;
+    padding: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: 9px;
+    color: #6a6a8a;
+    line-height: 1.4;
+    flex: 1;
+}
+
+#wuerfel-status {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 4px;
+    font-size: 9px;
+}
+.wuerfel-step {
+    background: #0e0e1a;
+    border: 1px solid #1a1a2a;
+    border-radius: 4px;
+    padding: 4px;
+    text-align: center;
+}
+.wuerfel-step .level { color: var(--gold); font-weight: bold; }
+.wuerfel-step .label { color: #666; font-size: 7px; }
+
+button {
+    background: #111;
+    color: var(--fg);
+    border: 1px solid #333;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 10px;
+    transition: all 0.2s;
+}
+button:hover { border-color: var(--gold); background: #1a1a2a; }
+button.primary { border-color: var(--gold); color: var(--gold); }
+button.primary:hover { background: var(--gold); color: #000; }
+button.danger { border-color: #f44; color: #f44; }
+button.danger:hover { background: #f44; color: #000; }
+
+@media (max-width: 800px) {
+    main { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1><span class="pyra">🔺 PYRAMIDE</span> · <span class="cube">◈ WÜRFELBILDUNGS-ENGINE</span></h1>
+    <div id="clock">⏱️ --:--:--</div>
+</header>
+
+<main>
+    <div id="visual">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:#666;">🌀 Würfelbildung · 3 → 9 → 27 → 81</span>
+            <span id="status-display" style="color:var(--gold);">● bereit</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;height:calc(100% - 30px);">
+            <div style="background:#0e0e1a;border:1px solid #1a1a2a;border-radius:6px;padding:12px;text-align:center;">
+                <div style="font-size:9px;color:#666;">SYN · 90°</div>
+                <div style="font-size:24px;color:var(--syn);" id="syn-display">0.50</div>
+            </div>
+            <div style="background:#0e0e1a;border:1px solid #1a1a2a;border-radius:6px;padding:12px;text-align:center;">
+                <div style="font-size:9px;color:#666;">QUANT · 120°</div>
+                <div style="font-size:24px;color:var(--quant);" id="quant-display">0.50</div>
+            </div>
+            <div style="background:#0e0e1a;border:1px solid #1a1a2a;border-radius:6px;padding:12px;text-align:center;grid-column:1/3;">
+                <div style="font-size:9px;color:#666;">RESPO · φ = 1.618</div>
+                <div style="font-size:32px;color:var(--respo);" id="respo-display">0.50</div>
+            </div>
+        </div>
+
+        <div id="wuerfel-status">
+            <div class="wuerfel-step"><div class="level">3</div><div class="label">Grund</div></div>
+            <div class="wuerfel-step"><div class="level">9</div><div class="label">Erweiterung</div></div>
+            <div class="wuerfel-step"><div class="level">27</div><div class="label">Würfel</div></div>
+            <div class="wuerfel-step" style="border-color:var(--gold);"><div class="level">81</div><div class="label">⭐ KOMPLETT</div></div>
+        </div>
+    </div>
+
+    <div id="panel">
+        <div class="metric-grid">
+            <div class="metric syn"><div class="label">⟳ SYN</div><div class="value" id="syn-value">0.50</div></div>
+            <div class="metric quant"><div class="label">⚛ QUANT</div><div class="value" id="quant-value">0.50</div></div>
+            <div class="metric respo"><div class="label">◈ RESPO</div><div class="value" id="respo-value">0.50</div></div>
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="primary" id="btn-update">🔄 UPDATE</button>
+            <button id="btn-wuerfel">📐 WÜRFELBILDUNG</button>
+            <button class="danger" id="btn-reset">⟲ RESET</button>
+            <button id="btn-auto">▶ AUTO</button>
+        </div>
+
+        <div id="log">
+            <div class="entry">[INIT] 🔺 PYRAMIDE · WÜRFELBILDUNGS-ENGINE</div>
+        </div>
+    </div>
+</main>
+
+<script type="module">
+// ============================================================
+// PYRAMIDE · WÜRFELBILDUNGS-ENGINE · UI
+// ============================================================
+
+import { PYRAMIDE_WUERFEL } from './pyramide-wuerfel-engine.js';
+
+// ─── DOM ──────────────────────────────────────────────────────
+const synDisplay = document.getElementById('syn-display');
+const quantDisplay = document.getElementById('quant-display');
+const respoDisplay = document.getElementById('respo-display');
+const synValue = document.getElementById('syn-value');
+const quantValue = document.getElementById('quant-value');
+const respoValue = document.getElementById('respo-value');
+const logDiv = document.getElementById('log');
+const statusDisplay = document.getElementById('status-display');
+
+// ─── LOG ──────────────────────────────────────────────────────
+function log(msg) {
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+    const zeit = new Date().toLocaleTimeString();
+    entry.innerHTML = `<span style="color:#444;">[${zeit}]</span> ${msg}`;
+    logDiv.appendChild(entry);
+    logDiv.scrollTop = logDiv.scrollHeight;
+    while (logDiv.children.length > 30) logDiv.removeChild(logDiv.firstChild);
+}
+
+// ─── UPDATE ──────────────────────────────────────────────────
+function updateUI() {
+    const status = PYRAMIDE_WUERFEL.update();
+    const s = status;
+
+    synDisplay.textContent = s.syn.toFixed(2);
+    quantDisplay.textContent = s.quant.toFixed(2);
+    respoDisplay.textContent = s.respo.toFixed(2);
+    synValue.textContent = s.syn.toFixed(2);
+    quantValue.textContent = s.quant.toFixed(2);
+    respoValue.textContent = s.respo.toFixed(2);
+
+    statusDisplay.textContent = `● ${s.status}`;
+    statusDisplay.style.color = s.status === 'aktiv' ? 'var(--gold)' : '#666';
+}
+
+// ─── WÜRFELBILDUNG ──────────────────────────────────────────
+function wuerfelBildung() {
+    const result = PYRAMIDE_WUERFEL.wuerfelBildung();
+    for (const step of result) {
+        log(`🌀 ${step.label}: Level ${step.level} · RESPO=${step.respo.toFixed(2)}`);
+    }
+    log(`📐 WÜRFELBILDUNG KOMPLETT · 81`);
+}
+
+// ─── RESET ──────────────────────────────────────────────────
+function resetSystem() {
+    PYRAMIDE_WUERFEL.syn.wert = 0.5;
+    PYRAMIDE_WUERFEL.quant.wert = 0.5;
+    PYRAMIDE_WUERFEL.respo.wert = 0.5;
+    PYRAMIDE_WUERFEL.status = 'initialisiert';
+    updateUI();
+    log('⟲ RESET: Pyramide zurückgesetzt');
+}
+
+// ─── AUTO ──────────────────────────────────────────────────
+let autoInterval = null;
+function toggleAuto() {
+    if (autoInterval) {
+        clearInterval(autoInterval);
+        autoInterval = null;
+        document.getElementById('btn-auto').textContent = '▶ AUTO';
+        log('⏸ AUTO pausiert');
+        return;
+    }
+    autoInterval = setInterval(() => {
+        updateUI();
+    }, 2000);
+    document.getElementById('btn-auto').textContent = '⏸ PAUSE';
+    log('▶ AUTO gestartet');
+}
+
+// ─── EVENTS ──────────────────────────────────────────────────
+document.getElementById('btn-update').addEventListener('click', updateUI);
+document.getElementById('btn-wuerfel').addEventListener('click', wuerfelBildung);
+document.getElementById('btn-reset').addEventListener('click', resetSystem);
+document.getElementById('btn-auto').addEventListener('click', toggleAuto);
+
+// ─── UHR ──────────────────────────────────────────────────────
+function updateClock() {
+    document.getElementById('clock').textContent = `⏱️ ${new Date().toLocaleTimeString()}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── INIT ────────────────────────────────────────────────────
+log('🔺 PYRAMIDE · WÜRFELBILDUNGS-ENGINE geladen');
+log(`📦 Version ${PYRAMIDE_WUERFEL.version}`);
+log('🌀 2268 = Tokio · 756 = Corlu · 243 = HH');
+log('⌨️  update · wuerfel · reset · auto');
+
+updateUI();
+</script>
+</body>
+</html>
