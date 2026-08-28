@@ -158,7 +158,6 @@ button.danger { border-color: #f44; color: #f44; }
 button.danger:hover { background: #f44; color: #000; }
 button.active { border-color: var(--gold); background: var(--gold); color: #000; }
 
-/* Würfel-Animation */
 .pyramid-glow {
     position: absolute;
     bottom: 10px;
@@ -238,23 +237,16 @@ button.active { border-color: var(--gold); background: var(--gold); color: #000;
 
 <script>
 // ============================================================
-// 1. KONSTANTEN — PYRAMIDE · WÜRFEL
+// CONTINIUM · PYRAMIDE · WÜRFELBILDUNG
 // ============================================================
+
+// ─── KONSTANTEN ──────────────────────────────────────────────
 const PHI = 1.61803398875;
 const DEG_90 = Math.PI / 2;
 const DEG_120 = (2 * Math.PI) / 3;
-const DEG_180 = Math.PI;
+const ORBITS = { tokio: 2268, corlu: 756, hh: 243 };
 
-// ORBIT-KONSTANTEN (aus QUANT.js)
-const ORBITS = {
-    tokio: 2268,
-    corlu: 756,
-    hh: 243
-};
-
-// ============================================================
-// 2. CANVAS SETUP — 3D PYRAMIDE
-// ============================================================
+// ─── CANVAS ──────────────────────────────────────────────────
 const canvas = document.getElementById('pyraCanvas');
 const ctx = canvas.getContext('2d');
 let W, H, cx, cy, scale;
@@ -264,73 +256,53 @@ function resizeCanvas() {
     const rect = wrap.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
-    W = canvas.width;
-    H = canvas.height;
-    cx = W / 2;
-    cy = H / 2;
+    W = canvas.width; H = canvas.height;
+    cx = W / 2; cy = H / 2;
     scale = Math.min(W, H) * 0.35;
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// ============================================================
-// 3. 3D-HELFER (PYRAMIDE → WÜRFEL)
-// ============================================================
+// ─── 3D HELFER ──────────────────────────────────────────────
 function rotate3D(x, y, z, rotX, rotY, rotZ) {
-    // Rotation um X
     let y1 = y * Math.cos(rotX) - z * Math.sin(rotX);
     let z1 = y * Math.sin(rotX) + z * Math.cos(rotX);
-    // Rotation um Y
     let x1 = x * Math.cos(rotY) + z1 * Math.sin(rotY);
     let z2 = -x * Math.sin(rotY) + z1 * Math.cos(rotY);
-    // Rotation um Z
     let x2 = x1 * Math.cos(rotZ) - y1 * Math.sin(rotZ);
     let y2 = x1 * Math.sin(rotZ) + y1 * Math.cos(rotZ);
     return { x: x2, y: y2, z: z2 };
 }
 
-function project(x, y, z, scale) {
+function project(x, y, z, s) {
     const dist = 800;
     const fov = 400;
     const factor = fov / (fov + z + dist);
-    return {
-        x: cx + x * scale * factor,
-        y: cy + y * scale * factor,
-        factor: factor
-    };
+    return { x: cx + x * s * factor, y: cy + y * s * factor, factor: factor };
 }
 
-// ============================================================
-// 4. PYRAMIDE · WÜRFEL-GENERATOR
-// ============================================================
+// ─── PYRAMIDE + WÜRFEL GENERATOR ────────────────────────────
 function generatePyramid(level, rot) {
     const size = Math.pow(3, level) * 0.5;
     const points = [];
 
-    // Basis (Quadrat)
     const basePoints = [
         { x: -size, y: -size, z: -size },
         { x: size, y: -size, z: -size },
         { x: size, y: -size, z: size },
         { x: -size, y: -size, z: size }
     ];
-
-    // Spitze der Pyramide (oben)
     const apex = { x: 0, y: size * 1.5, z: 0 };
 
-    // Basis-Rand
     for (let i = 0; i < 4; i++) {
         const p1 = basePoints[i];
         const p2 = basePoints[(i + 1) % 4];
         points.push({ x1: p1.x, y1: p1.y, z1: p1.z, x2: p2.x, y2: p2.y, z2: p2.z, type: 'base' });
     }
-
-    // Kanten zur Spitze
     for (const p of basePoints) {
         points.push({ x1: p.x, y1: p.y, z1: p.z, x2: apex.x, y2: apex.y, z2: apex.z, type: 'edge' });
     }
 
-    // Würfel-Ecken (zusätzlich für WÜRFELBILDUNG)
     const cubeCorners = [
         { x: -size, y: -size, z: -size },
         { x: size, y: -size, z: -size },
@@ -341,33 +313,25 @@ function generatePyramid(level, rot) {
         { x: size, y: size, z: size },
         { x: -size, y: size, z: size }
     ];
-
-    // Würfel-Kanten
     const cubeEdges = [
-        [0,1], [1,2], [2,3], [3,0],
-        [4,5], [5,6], [6,7], [7,4],
-        [0,4], [1,5], [2,6], [3,7]
+        [0,1],[1,2],[2,3],[3,0],
+        [4,5],[5,6],[6,7],[7,4],
+        [0,4],[1,5],[2,6],[3,7]
     ];
-
     for (const [i, j] of cubeEdges) {
         const p1 = cubeCorners[i];
         const p2 = cubeCorners[j];
         points.push({ x1: p1.x, y1: p1.y, z1: p1.z, x2: p2.x, y2: p2.y, z2: p2.z, type: 'cube' });
     }
 
-    // Rotieren
-    const rotated = points.map(p => {
+    return points.map(p => {
         const r1 = rotate3D(p.x1, p.y1, p.z1, rot.x, rot.y, rot.z);
         const r2 = rotate3D(p.x2, p.y2, p.z2, rot.x, rot.y, rot.z);
         return { ...p, x1: r1.x, y1: r1.y, z1: r1.z, x2: r2.x, y2: r2.y, z2: r2.z };
     });
-
-    return rotated;
 }
 
-// ============================================================
-// 5. STATE
-// ============================================================
+// ─── STATE ──────────────────────────────────────────────────
 const state = {
     running: false,
     paused: false,
@@ -377,79 +341,54 @@ const state = {
     synValue: 0.5,
     quantValue: 0.5,
     respoValue: 0.5,
-    rotX: 0,
-    rotY: 0,
-    rotZ: 0,
-    level: 2, // 3^2 = 9
-    orbits: {
-        tokio: 0,
-        corlu: 0,
-        hh: 0
-    },
-    pyramidPoints: [],
-    showCube: true,
-    showPyramid: true
+    rotX: 0, rotY: 0, rotZ: 0,
+    level: 2,
+    orbits: { tokio: 0, corlu: 0, hh: 0 }
 };
 
-// ============================================================
-// 6. LOG
-// ============================================================
+// ─── LOG ────────────────────────────────────────────────────
 function log(msg, type = 'info') {
     const logDiv = document.getElementById('log');
     const entry = document.createElement('div');
     entry.className = 'entry';
     const time = new Date().toLocaleTimeString();
-    const cls = type === 'ok' ? 'ok' : type === 'err' ? 'err' : type === 'warn' ? 'warn' :
-                type === 'syn' ? 'syn' : type === 'quant' ? 'quant' : type === 'respo' ? 'respo' :
-                type === 'tokio' ? 'tokio' : type === 'corlu' ? 'corlu' : '';
+    const cls = type === 'ok' ? 'ok' : type === 'warn' ? 'warn' :
+                type === 'syn' ? 'syn' : type === 'quant' ? 'quant' :
+                type === 'respo' ? 'respo' : type === 'tokio' ? 'tokio' :
+                type === 'corlu' ? 'corlu' : '';
     entry.innerHTML = `<span class="time">[${time}]</span> <span class="msg ${cls}">${msg}</span>`;
     logDiv.appendChild(entry);
     logDiv.scrollTop = logDiv.scrollHeight;
     while (logDiv.children.length > 100) logDiv.removeChild(logDiv.firstChild);
 }
 
-// ============================================================
-// 7. RESPO · SYN · QUANT
-// ============================================================
-function computeRespo(synVal, quantVal) {
-    const raw = (synVal + quantVal) / PHI;
+function computeRespo(syn, quant) {
+    const raw = (syn + quant) / PHI;
     return Math.min(1, Math.max(0, raw * (1 + state.cycle * 0.005)));
 }
 
-// ============================================================
-// 8. RENDER — PYRAMIDE · WÜRFEL
-// ============================================================
+// ─── RENDER ──────────────────────────────────────────────────
 function render() {
-    if (state.paused) {
-        requestAnimationFrame(render);
-        return;
-    }
+    if (state.paused) { requestAnimationFrame(render); return; }
 
     ctx.clearRect(0, 0, W, H);
-
-    // Hintergrund
     const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, W * 0.6);
     grad.addColorStop(0, '#0a0a1a');
     grad.addColorStop(1, '#000');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
 
-    // Gitter (3-9-27)
     drawGrid();
-
-    // Orbits (2268, 756, 243)
     drawOrbits();
 
-    // PYRAMIDE + WÜRFEL
     const rot = { x: state.rotX, y: state.rotY, z: state.rotZ };
     const points = generatePyramid(state.level, rot);
 
-    // Zeichne Basis (Pyramide) — rot
     for (const p of points) {
         if (p.type === 'base') {
             const p1 = project(p.x1, p.y1, p.z1, scale * 0.6);
             const p2 = project(p.x2, p.y2, p.z2, scale * 0.6);
-            ctx.strokeStyle = `rgba(255, 107, 107, ${0.4 + state.synValue * 0.4})`;
+            ctx.strokeStyle = `rgba(255,107,107,${0.4 + state.synValue * 0.4})`;
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
@@ -457,13 +396,11 @@ function render() {
             ctx.stroke();
         }
     }
-
-    // Zeichne Kanten zur Spitze (Pyramide) — gelb
     for (const p of points) {
         if (p.type === 'edge') {
             const p1 = project(p.x1, p.y1, p.z1, scale * 0.6);
             const p2 = project(p.x2, p.y2, p.z2, scale * 0.6);
-            ctx.strokeStyle = `rgba(255, 217, 61, ${0.3 + state.respoValue * 0.5})`;
+            ctx.strokeStyle = `rgba(255,217,61,${0.3 + state.respoValue * 0.5})`;
             ctx.lineWidth = 1.5;
             ctx.setLineDash([4, 6]);
             ctx.beginPath();
@@ -473,42 +410,34 @@ function render() {
             ctx.setLineDash([]);
         }
     }
-
-    // Zeichne Würfel-Kanten — blau
     for (const p of points) {
         if (p.type === 'cube') {
             const p1 = project(p.x1, p.y1, p.z1, scale * 0.6);
             const p2 = project(p.x2, p.y2, p.z2, scale * 0.6);
-            ctx.strokeStyle = `rgba(107, 107, 255, ${0.2 + state.quantValue * 0.5})`;
+            ctx.strokeStyle = `rgba(107,107,255,${0.2 + state.quantValue * 0.5})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
             ctx.stroke();
-
-            // Ecken markieren
-            ctx.fillStyle = `rgba(107, 107, 255, ${0.3 + state.quantValue * 0.3})`;
+            ctx.fillStyle = `rgba(107,107,255,${0.3 + state.quantValue * 0.3})`;
             ctx.beginPath();
             ctx.arc(p1.x, p1.y, 3, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 
-    // RESPO-Kern (Mitte)
     drawRespoCore();
 
-    // Metriken aktualisieren
     document.getElementById('syn-value').textContent = state.synValue.toFixed(3);
     document.getElementById('quant-value').textContent = state.quantValue.toFixed(3);
     document.getElementById('respo-value').textContent = state.respoValue.toFixed(3);
 
-    // Rotation
     if (state.running) {
         state.rotX += 0.003;
         state.rotY += 0.005;
         state.rotZ += 0.001;
         state.t += 0.01;
-        // Orbits
         state.orbits.tokio += 0.002;
         state.orbits.corlu += 0.003;
         state.orbits.hh += 0.005;
@@ -518,9 +447,7 @@ function render() {
 }
 render();
 
-// ============================================================
-// 9. ZEICHEN-FUNKTIONEN
-// ============================================================
+// ─── ZEICHEN ────────────────────────────────────────────────
 function drawGrid() {
     const sizes = [3, 9, 27];
     const colors = ['#0ff3', '#f0f3', '#ff03'];
@@ -545,63 +472,59 @@ function drawGrid() {
 }
 
 function drawOrbits() {
-    // Tokio (2268) — groß, rot
     const t = state.orbits.tokio;
     const r1 = Math.min(W, H) * 0.32;
-    ctx.strokeStyle = `rgba(255, 107, 107, ${0.1 + state.synValue * 0.2})`;
+    ctx.strokeStyle = `rgba(255,107,107,${0.1 + state.synValue * 0.2})`;
     ctx.lineWidth = 0.5;
     ctx.setLineDash([2, 8]);
     ctx.beginPath();
     ctx.arc(cx + Math.cos(t) * r1 * 0.1, cy + Math.sin(t) * r1 * 0.1, r1 * 0.9, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = `rgba(255, 107, 107, ${0.3 + state.synValue * 0.3})`;
+    ctx.fillStyle = `rgba(255,107,107,${0.3 + state.synValue * 0.3})`;
     ctx.font = '8px Consolas';
     ctx.textAlign = 'center';
     ctx.fillText('2268', cx + Math.cos(t) * r1 * 0.9, cy + Math.sin(t) * r1 * 0.9);
 
-    // Corlu (756) — grün
     const r2 = Math.min(W, H) * 0.22;
-    ctx.strokeStyle = `rgba(107, 255, 107, ${0.1 + state.quantValue * 0.2})`;
+    ctx.strokeStyle = `rgba(107,255,107,${0.1 + state.quantValue * 0.2})`;
     ctx.lineWidth = 0.5;
     ctx.setLineDash([2, 8]);
     ctx.beginPath();
     ctx.arc(cx + Math.cos(t * 1.3) * r2 * 0.1, cy + Math.sin(t * 1.3) * r2 * 0.1, r2, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = `rgba(107, 255, 107, ${0.3 + state.quantValue * 0.3})`;
+    ctx.fillStyle = `rgba(107,255,107,${0.3 + state.quantValue * 0.3})`;
     ctx.fillText('756', cx + Math.cos(t * 1.3) * r2, cy + Math.sin(t * 1.3) * r2);
 
-    // HH (243) — blau
     const r3 = Math.min(W, H) * 0.12;
-    ctx.strokeStyle = `rgba(107, 107, 255, ${0.1 + state.respoValue * 0.2})`;
+    ctx.strokeStyle = `rgba(107,107,255,${0.1 + state.respoValue * 0.2})`;
     ctx.lineWidth = 0.5;
     ctx.setLineDash([2, 8]);
     ctx.beginPath();
     ctx.arc(cx + Math.cos(t * 1.7) * r3 * 0.1, cy + Math.sin(t * 1.7) * r3 * 0.1, r3, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = `rgba(107, 107, 255, ${0.3 + state.respoValue * 0.3})`;
+    ctx.fillStyle = `rgba(107,107,255,${0.3 + state.respoValue * 0.3})`;
     ctx.fillText('243', cx + Math.cos(t * 1.7) * r3, cy + Math.sin(t * 1.7) * r3);
 }
 
 function drawRespoCore() {
     const val = state.respoValue;
     const coreRadius = 8 + val * 25;
-
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius + 25);
-    glow.addColorStop(0, `rgba(255, 217, 61, ${0.3 + val * 0.5})`);
-    glow.addColorStop(0.5, `rgba(255, 217, 61, ${0.1 + val * 0.2})`);
-    glow.addColorStop(1, 'rgba(255, 217, 61, 0)');
+    glow.addColorStop(0, `rgba(255,217,61,${0.3 + val * 0.5})`);
+    glow.addColorStop(0.5, `rgba(255,217,61,${0.1 + val * 0.2})`);
+    glow.addColorStop(1, 'rgba(255,217,61,0)');
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(cx, cy, coreRadius + 25, 0, Math.PI * 2);
     ctx.fill();
 
     const coreGrad = ctx.createRadialGradient(cx - 3, cy - 3, 0, cx, cy, coreRadius);
-    coreGrad.addColorStop(0, `rgba(255, 217, 61, ${0.9 + val * 0.1})`);
-    coreGrad.addColorStop(0.7, `rgba(255, 200, 50, ${0.6 + val * 0.3})`);
-    coreGrad.addColorStop(1, `rgba(255, 180, 30, ${0.3 + val * 0.2})`);
+    coreGrad.addColorStop(0, `rgba(255,217,61,${0.9 + val * 0.1})`);
+    coreGrad.addColorStop(0.7, `rgba(255,200,50,${0.6 + val * 0.3})`);
+    coreGrad.addColorStop(1, `rgba(255,180,30,${0.3 + val * 0.2})`);
     ctx.fillStyle = coreGrad;
     ctx.shadowColor = '#ffd700';
     ctx.shadowBlur = 20 + val * 30;
@@ -616,14 +539,12 @@ function drawRespoCore() {
     ctx.textBaseline = 'middle';
     ctx.fillText('◈', cx, cy - 1);
 
-    ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + val * 0.5})`;
+    ctx.fillStyle = `rgba(255,255,255,${0.3 + val * 0.5})`;
     ctx.font = '8px Consolas';
     ctx.fillText(`φ = ${state.respoValue.toFixed(3)}`, cx, cy + coreRadius + 14);
 }
 
-// ============================================================
-// 10. CONTROLS
-// ============================================================
+// ─── CONTROLS ──────────────────────────────────────────────
 document.getElementById('btn-start').addEventListener('click', function() {
     state.running = !state.running;
     this.textContent = state.running ? '⏸ STOP' : '▶ START';
@@ -657,9 +578,7 @@ document.getElementById('btn-reset').addEventListener('click', function() {
     state.synValue = 0.5;
     state.quantValue = 0.5;
     state.respoValue = 0.5;
-    state.rotX = 0;
-    state.rotY = 0;
-    state.rotZ = 0;
+    state.rotX = 0; state.rotY = 0; state.rotZ = 0;
     state.orbits = { tokio: 0, corlu: 0, hh: 0 };
     document.getElementById('btn-start').textContent = '▶ START';
     document.getElementById('state-display').textContent = '● reset';
@@ -668,6 +587,9 @@ document.getElementById('btn-reset').addEventListener('click', function() {
     document.getElementById('syn-value').textContent = '0.500';
     document.getElementById('quant-value').textContent = '0.500';
     document.getElementById('respo-value').textContent = '0.500';
+    if (window.autoInterval) { clearInterval(window.autoInterval); window.autoInterval = null; }
+    document.getElementById('btn-auto').textContent = '▶ AUTO';
+    state.autoMode = false;
     log('⟲ RESET — Pyramide zurückgesetzt', 'warn');
 });
 
@@ -687,20 +609,18 @@ document.getElementById('btn-auto').addEventListener('click', function() {
             state.synValue = 0.3 + 0.6 * (0.5 + 0.5 * Math.sin(state.cycle * 0.3));
             state.quantValue = 0.3 + 0.6 * (0.5 + 0.5 * Math.cos(state.cycle * 0.25));
             state.respoValue = computeRespo(state.synValue, state.quantValue);
-            state.level = 1 + (state.cycle % 3); // 3^1, 3^2, 3^3
+            state.level = 1 + (state.cycle % 3);
             log(`🔄 Zyklus ${state.cycle}: Level=${state.level} SYN=${state.synValue.toFixed(2)} QUANT=${state.quantValue.toFixed(2)} RESPO=${state.respoValue.toFixed(2)}`, 'warn');
         }, 3000);
     } else {
-        clearInterval(window.autoInterval);
+        if (window.autoInterval) { clearInterval(window.autoInterval); window.autoInterval = null; }
         log('⏸ AUTO-Modus pausiert', 'warn');
         document.getElementById('state-display').textContent = '● pausiert';
         document.getElementById('state-display').style.color = '#ff4';
     }
 });
 
-// ============================================================
-// 11. TASTATUR
-// ============================================================
+// ─── TASTATUR ──────────────────────────────────────────────
 document.addEventListener('keydown', function(e) {
     if (e.key === ' ') { e.preventDefault(); document.getElementById('btn-start').click(); }
     if (e.key === 's' || e.key === 'S') document.getElementById('btn-syn').click();
@@ -710,18 +630,14 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'a' || e.key === 'A') document.getElementById('btn-auto').click();
 });
 
-// ============================================================
-// 12. UHR
-// ============================================================
+// ─── UHR ──────────────────────────────────────────────────
 function updateClock() {
     document.getElementById('clock').textContent = '⏱️ ' + new Date().toLocaleTimeString();
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-// ============================================================
-// 13. INIT
-// ============================================================
+// ─── INIT ──────────────────────────────────────────────────
 log('🔺 PYRAMIDE · WÜRFELBILDUNG — CONTINIUM', 'respo');
 log('🌀 2268 = Tokio-Orbit (Ursache)', 'tokio');
 log('🌀 756 = Corlu-Orbit (Wirkung)', 'corlu');
@@ -730,9 +646,6 @@ log('◈ RESPO = (SYN + QUANT) / φ', 'respo');
 log('⌨️  space=Start  s=SYN  q=QUANT  r=RESPO  x=Reset  a=Auto', 'ok');
 
 console.log('🔺 PYRAMIDE · WÜRFELBILDUNG — CONTINIUM');
-console.log('🌀 2268 = Tokio-Orbit');
-console.log('🌀 756 = Corlu-Orbit');
-console.log('🌀 243 = HH-Orbit');
 console.log('⌨️  space=Start  s=SYN  q=QUANT  r=RESPO  x=Reset  a=Auto');
 
 // Automatisch starten
